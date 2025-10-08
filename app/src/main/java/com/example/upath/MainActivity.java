@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
      * * Nota: Embora seja boa prática usar notação camelCase em Java (ex: goToRegister),
      * estamos usando 'go_to_register' para corresponder ao valor no XML ('go-to-register' não é válido em Java).
      */
-    public void go_to_register (View view) {
+    public void goToRegister (View view) {
         // Crie um Intent para ir para a RegisterActivity
         // Certifique-se de que a RegisterActivity existe e está declarada no AndroidManifest.xml
         Intent intent = new Intent(this, Register.class);
