@@ -12,7 +12,7 @@
         android:id="@+id/logoLogin"
         android:layout_width="178dp"
         android:layout_height="182dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
@@ -112,9 +112,9 @@
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-
+    <!-- ID alterado de button_login para botao_logar -->
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_login"
+        android:id="@+id/botao_logar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
@@ -137,8 +137,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_password_layout" />
 
+    <!-- ID alterado de forget_password para botao_logar_google -->
     <TextView
-        android:id="@+id/forget_password"
+        android:id="@+id/botao_logar_google"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
@@ -159,7 +160,7 @@
         android:layout_marginEnd="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/button_login">
+        app:layout_constraintTop_toBottomOf="@id/botao_logar">
 
         <View
             android:id="@+id/leftLine"
@@ -239,8 +240,9 @@
             android:textSize="15sp" />
     </LinearLayout>
 
+    <!-- ID alterado de text_cadastre para link_cadastro -->
     <TextView
-        android:id="@+id/text_cadastre"
+        android:id="@+id/link_cadastro"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -248,9 +250,13 @@
         android:gravity="center"
         android:text="@string/register_text"
         android:textColor="@color/white"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick=" go_to_register"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/login_google_layout" />
+        app:layout_constraintTop_toBottomOf="@id/login_google_layout"
+        tools:ignore="OnClick" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

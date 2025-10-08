@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">UPath</string>
-    <string name="register_text">Não tem uma conta? <font color ="#1F2937" ><u>Cadastre-se!</u> </font></string>
+    <string name="register_text">Não tem uma conta? <font color="#1F2937"><u>Cadastre-se!</u> </font></string>
+    <string name="title_activity_register">register</string>
 </resources>
