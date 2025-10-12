@@ -139,7 +139,7 @@
 
     <!-- ID alterado de forget_password para botao_logar_google -->
     <TextView
-        android:id="@+id/botao_logar_google"
+        android:id="@+id/linkEsquecimento"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
@@ -147,6 +147,7 @@
         android:fontFamily="@font/poppins"
         android:text="Esqueceu a Senha?"
         android:textColor="@color/white"
+        android:onClick="goToRetriever"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_password_layout" />

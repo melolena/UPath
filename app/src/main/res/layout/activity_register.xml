@@ -22,7 +22,7 @@
         android:id="@+id/backArrow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+        android:layout_marginStart="16dp"
         android:clickable="true"
         android:focusable="true"
         android:minWidth="24dp"
@@ -244,6 +244,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:onClick="registerUser"
         android:text="Cadastrar"
         android:textColor="@color/white"
         android:textSize="20sp"
@@ -258,7 +259,6 @@
         app:layout_constraintEnd_toStartOf="@+id/guideline_end"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/guideline_start"
-
         app:layout_constraintTop_toBottomOf="@id/input_confirm_password_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -71,19 +71,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Método chamado quando o TextView "link-cadastro" é clicado via android:onClick="go-to-register".
-     * Inicia a tela de registro.
-     * * Nota: Embora seja boa prática usar notação camelCase em Java (ex: goToRegister),
-     * estamos usando 'go_to_register' para corresponder ao valor no XML ('go-to-register' não é válido em Java).
-     */
-    public void goToRegister (View view) {
+       public void goToRegister (View view) {
         // Crie um Intent para ir para a RegisterActivity
         // Certifique-se de que a RegisterActivity existe e está declarada no AndroidManifest.xml
         Intent intent = new Intent(this, Register.class);
         startActivity(intent);
         // Opcional: chame finish() se não quiser que o usuário volte para a tela de Login
         // finish();
+    }
+
+    public void goToRetriever (View view) {
+    Intent intent = new Intent(this, Retrieve.class);
+    startActivity(intent);
+
     }
 }
 
