@@ -7,6 +7,7 @@ import android.text.TextWatcher;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -75,6 +76,15 @@ public class Register extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // 4. Ação do botão Cadastrar
+        botaoCadastrar.setOnClickListener(v -> {
+            String emailText = editEmail.getText().toString().trim();
+            String passwordText = editPassword.getText().toString().trim();
+
+            Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_SHORT).show();
+            goToMainActivity(v);
+        });
     }
 
     // Método para verificar e habilitar/desabilitar o botão
@@ -84,16 +94,26 @@ public class Register extends AppCompatActivity {
         String passwordText = editPassword.getText().toString().trim();
         String confirmPasswordText = editConfirmPassword.getText().toString().trim();
 
+        // 1. Todos os campos preenchidos
         boolean allFieldsFilled = !emailText.isEmpty()
                 && !confirmEmailText.isEmpty()
                 && !passwordText.isEmpty()
                 && !confirmPasswordText.isEmpty();
 
+        // 2. Validação de formato e comprimento
         boolean isEmailFormatValid = Patterns.EMAIL_ADDRESS.matcher(emailText).matches();
         boolean isPasswordLengthValid = passwordText.length() >= 8;
 
-        // Só habilita se todos os requisitos forem atendidos
-        boolean canEnableButton = allFieldsFilled && isEmailFormatValid && isPasswordLengthValid;
+        // 3. Campos de confirmação iguais
+        boolean emailsMatch = emailText.equals(confirmEmailText);
+        boolean passwordsMatch = passwordText.equals(confirmPasswordText);
+
+        // Regra final
+        boolean canEnableButton = allFieldsFilled
+                && isEmailFormatValid
+                && isPasswordLengthValid
+                && emailsMatch
+                && passwordsMatch;
 
         botaoCadastrar.setEnabled(canEnableButton);
         botaoCadastrar.refreshDrawableState();
