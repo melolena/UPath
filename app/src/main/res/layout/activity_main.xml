@@ -123,6 +123,7 @@
         android:background="@drawable/button_login_selector"
         android:elevation="8dp"
         android:fontFamily="@font/poppins_semibold"
+        android:onClick="goToHome"
         android:paddingLeft="10dp"
         android:paddingRight="8dp"
         android:text="Logar"

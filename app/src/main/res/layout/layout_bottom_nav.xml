@@ -6,29 +6,27 @@
     android:clipToPadding="false"
     android:paddingBottom="16dp">
 
-    <!-- BottomNavigationView ajustado com largura de 60% e centralizado -->
+    <!-- BottomNavigationView ajustado com largura de 80% e centralizado -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="0dp"
         android:layout_height="60dp"
-        android:layout_marginTop="16dp"
-
+        android:layout_marginTop="8dp"
         android:background="@drawable/bottom_nav_background"
-        app:itemIconSize="30dp"
 
+        app:itemIconSize="30dp"
         app:itemIconTint="@color/white"
         app:itemTextColor="@color/white"
         app:labelVisibilityMode="unlabeled"
 
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.05"
-        app:layout_constraintHorizontal_bias="0.628"
-        app:layout_constraintStart_toStartOf="parent"
+        app:itemRippleColor="@android:color/transparent"
+        app:itemBackground="@android:color/transparent"
+        app:itemActiveIndicatorStyle="@style/NoActiveIndicator"
 
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.6"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemRippleColor="@null"
-        app:itemIndicator="@null"/>
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintWidth_percent="0.8"
+    app:menu="@menu/bottom_nav_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
