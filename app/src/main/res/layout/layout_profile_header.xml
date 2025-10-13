@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Este layout representa o cabeçalho do perfil reutilizável -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/profile_header_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/header"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp">
+
+    <!-- Foto de Perfil (Usando CardView para o círculo) -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="4dp"
+        app:cardPreventCornerOverlap="false"
+        app:strokeColor="#F3F4F6"
+        app:strokeWidth="3dp">
+
+        <ImageView
+            android:id="@+id/profileImage"
+            android:layout_width="67dp"
+            android:layout_height="57dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/user_placeholder" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Texto de Saudação e Status (LinearLayout Vertical) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/greetingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins_semibold"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            tools:text="Olá, Maurício Gabriel Jr!" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins"
+            android:textColor="#CCFFFFFF"
+            android:textSize="14sp"
+            tools:text="O que vai ser hoje?" />
+    </LinearLayout>
+
+    <!-- Ícone de Notificação (Badge) - Usa RelativeLayout para empilhar o sino e o contador -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:paddingTop="4dp"> <!-- Padding para alinhar visualmente com o topo do texto -->
+
+        <!-- Ícone do Sino (AUMENTADO) -->
+
+
+        <ImageView
+            android:id="@+id/notificationIcon"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="0dp"
+            android:src="@drawable/notification_foreground"
+            app:tint="@color/white"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/notificationBadge"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_alignTop="@id/notificationIcon"
+            android:layout_alignEnd="@id/notificationIcon"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="7dp"
+            android:background="@drawable/badge_background"
+            android:elevation="2dp"
+            android:fontFamily="@font/poppins"
+            android:gravity="center"
+            android:text="3"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:translationY="0dp"
+            tools:text="3" />
+    </RelativeLayout>
+</LinearLayout>

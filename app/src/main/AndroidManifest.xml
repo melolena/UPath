@@ -11,6 +11,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UPath">
         <activity
+            android:name=".HomeUser"
+            android:exported="false" />
+        <activity
             android:name=".Retrieve"
             android:exported="false" />
         <activity

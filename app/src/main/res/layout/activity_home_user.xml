@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".HomeUser">
+
+
+    <include
+        android:id="@+id/profile_header"
+        layout="@layout/layout_profile_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/welcomeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="Bem-vindo ao UPath! "
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@+id/profile_header"
+        tools:layout_editor_absoluteX="92dp"
+        tools:ignore="MissingConstraints" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imageHome"
+        android:layout_width="359dp"
+        android:layout_height="195dp"
+        android:layout_marginTop="20dp"
+        android:scaleType="centerCrop"
+        app:srcCompat="@drawable/home_picture"
+        app:shapeAppearanceOverlay="@style/RoundedImageHome"
+        app:layout_constraintTop_toBottomOf="@id/welcomeTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/text_description_1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        android:fontFamily="@font/poppins"
+        android:text="Realize o teste de orientação vocacional para identificar a área que mais se alinha ao seu perfil."
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageHome" />
+
+    <TextView
+        android:id="@+id/text_description_2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="24dp"
+        android:fontFamily="@font/poppins"
+        android:text="Com suas informações de desempenho e interesse em bolsas, nossa plataforma analisará suas chances em programas como Sisu, Prouni, além de sugerir cursos e instituições compatíveis com seus objetivos."
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_description_1" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonEscolherTeste"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:fontFamily="@font/poppins_semibold"
+        android:text="Iniciar Teste"
+        android:textColor="@color/white"
+        android:backgroundTint="#7C3AED"
+        app:cornerRadius="10dp"
+        app:elevation="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_description_2" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Estado Selecionado (Ativo/Preenchido) -->
+    <item android:state_checked="true" android:drawable="@drawable/ic_home_filled" />
+
+    <!-- Estado Normal (Inativo/Simples) -->
+    <item android:state_checked="false" android:drawable="@drawable/ic_home_outline" />
+</selector>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Cor de fundo da barra de navegação -->
+    <solid android:color="@color/blue" />
+
+    <!-- Define o arredondamento dos cantos -->
+    <corners android:radius="16dp" />
+
+    <!-- Adiciona um padding interno, útil se você estivesse usando este drawable diretamente em um item.
+         No entanto, aqui ele está apenas definindo a forma. -->
+    <padding android:left="0dp" android:top="0dp"
+        android:right="0dp" android:bottom="0dp"/>
+</shape>
