@@ -11,6 +11,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UPath">
         <activity
+            android:name=".ActivityTeste"
+            android:exported="false" />
+        <activity
+            android:name=".Profile"
+            android:exported="false" />
+        <activity
             android:name=".HomeUser"
             android:exported="false" />
         <activity

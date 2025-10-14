@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Este layout representa o cabeçalho do perfil reutilizável -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -14,7 +13,6 @@
     android:paddingEnd="16dp"
     android:paddingBottom="16dp">
 
-    <!-- Foto de Perfil (Usando CardView para o círculo) -->
     <androidx.cardview.widget.CardView
         android:layout_width="56dp"
         android:layout_height="56dp"
@@ -26,13 +24,10 @@
 
         <ImageView
             android:id="@+id/profileImage"
-            android:layout_width="67dp"
-            android:layout_height="57dp"
-            android:scaleType="centerCrop"
+            android:layout_width="match_parent"   android:layout_height="match_parent"  android:scaleType="centerCrop"
             android:src="@drawable/user_placeholder" />
     </androidx.cardview.widget.CardView>
 
-    <!-- Texto de Saudação e Status (LinearLayout Vertical) -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -59,15 +54,11 @@
             tools:text="O que vai ser hoje?" />
     </LinearLayout>
 
-    <!-- Ícone de Notificação (Badge) - Usa RelativeLayout para empilhar o sino e o contador -->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:paddingTop="4dp"> <!-- Padding para alinhar visualmente com o topo do texto -->
-
-        <!-- Ícone do Sino (AUMENTADO) -->
-
+        android:paddingTop="4dp">
 
         <ImageView
             android:id="@+id/notificationIcon"
