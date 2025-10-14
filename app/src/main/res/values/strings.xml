@@ -2,4 +2,10 @@
     <string name="app_name">UPath</string>
     <string name="register_text">Não tem uma conta? <font color="#1F2937"><u>Cadastre-se!</u> </font></string>
     <string name="title_activity_register">register</string>
+    <string name="historico">Histórico</string>
+    <string name="resultado">Resultado</string>
+    <string name="salvos">Salvos</string>
+    <string name="planos">Planos</string>
+    <string name="sobre_nos">Sobre Nós</string>
+
 </resources>
