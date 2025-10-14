@@ -21,38 +21,42 @@ public class HomeUser extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home_user);
 
-        // --- 1. CONFIGURA A BOTTOM NAVIGATION ---
-        // Encontra a BottomNavigationView através dos includes
-        BottomNavigationView bottomNavigationView =
-                findViewById(R.id.layout_bottom_nav).findViewById(R.id.bottom_navigation);
+        // --- 1. CONFIGURAÇÃO SEGURA DA BOTTOM NAVIGATION ---
 
-        // Configura a barra de navegação inferior, marcando 'Home' como ativa
-        com.example.upath.BottomNavHelper.setupNavigation(bottomNavigationView, R.id.nav_home);
+        // 1a. Encontra o contêiner (o include)
+        View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
+
+        if (bottomNavInclude != null) {
+            // 1b. Encontra a BottomNavigationView dentro do contêiner
+            BottomNavigationView bottomNavigationView = bottomNavInclude.findViewById(R.id.bottom_navigation);
+
+            if (bottomNavigationView != null) {
+                // 1c. Configura a navegação, marcando 'Home' como ativa
+                com.example.upath.BottomNavHelper.setupNavigation(bottomNavigationView, R.id.nav_home);
+            }
+        }
 
         // --- 2. CONFIGURA O BOTÃO "INICIAR TESTE" ---
 
-        // Localiza o botão pelo ID
         MaterialButton buttonEscolherTeste = findViewById(R.id.buttonEscolherTeste);
 
-        // Adiciona o listener de clique para navegar para a ActivityTeste
-        buttonEscolherTeste.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeUser.this, ActivityTeste.class);
-
-            // Flags essenciais para evitar problemas de cache e pilha
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            startActivity(intent);
-            finish(); // Finaliza a HomeUser
-        });
+        if (buttonEscolherTeste != null) {
+            buttonEscolherTeste.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeUser.this, ActivityTeste.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
 
         // --- 3. AJUSTE DO EDGE TO EDGE ---
-        // Aplica o padding para evitar que o conteúdo fique atrás das barras do sistema
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        View mainLayout = findViewById(R.id.main);
+        if (mainLayout != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
     }
-
-    // Nota: O método público 'goToTeste(View view)' foi removido para evitar conflito com o OnClickListener.
 }
