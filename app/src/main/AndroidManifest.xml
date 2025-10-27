@@ -11,6 +11,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UPath">
         <activity
+            android:name=".EditProfile"
+            android:exported="false" />
+        <activity
             android:name=".ActivityTeste"
             android:exported="false" />
         <activity

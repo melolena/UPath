@@ -1,9 +1,10 @@
 package com.example.upath;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView; // Import necessário
-import android.widget.ImageView; // Import necessário
+import android.widget.TextView;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,17 +26,18 @@ public class Profile extends AppCompatActivity {
         setupInsets();
         setupBottomNav();
 
-        // --- 2. CONFIGURAÇÃO DA LISTA DE OPÇÕES (ADICIONADO) ---
+        // --- 2. CONFIGURAÇÃO DA LISTA DE OPÇÕES ---
         setupProfileOptions();
+
+        // --- 3. CONFIGURAÇÃO DOS CLIQUES DO HEADER ---
+        setupProfileNavigationIcon(); // Seta ao lado do email (leva para MainActivity)
+        setupEditIconClickListener(); // Ícone de lápis (leva para EditProfile)
     }
 
     // --- MÉTODOS DE SETUP BÁSICOS ---
 
     private void setupInsets() {
-        // Encontra o layout principal para os insets
         View mainLayout = findViewById(R.id.main);
-
-        // Se o layout for encontrado, aplica o listener de insets
         if (mainLayout != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -46,16 +48,50 @@ public class Profile extends AppCompatActivity {
     }
 
     private void setupBottomNav() {
-        // Encontra o contêiner (include)
         View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
-
         if (bottomNavInclude != null) {
-            // Encontra a barra de navegação dentro do include
             BottomNavigationView bottomNavigationView = bottomNavInclude.findViewById(R.id.bottom_navigation);
 
             if (bottomNavigationView != null) {
-                // Configura a navegação, marcando 'Profile' como ativo.
                 com.example.upath.BottomNavHelper.setupNavigation(bottomNavigationView, R.id.nav_profile);
+            }
+        }
+    }
+
+    // --- MÉTODOS DE NAVEGAÇÃO DO HEADER ---
+
+    // CONFIGURAÇÃO DO CLIQUE NO ÍCONE DE EDIÇÃO (CORREÇÃO ADICIONADA)
+    private void setupEditIconClickListener() {
+        View headerDetailInclude = findViewById(R.id.profile_detail_header);
+
+        if (headerDetailInclude != null) {
+            ImageView editIcon = headerDetailInclude.findViewById(R.id.icon_edit);
+
+            if (editIcon != null) {
+                editIcon.setOnClickListener(v -> {
+                    // Inicia a Activity EditProfile
+                    Intent intent = new Intent(Profile.this, EditProfile.class);
+                    startActivity(intent);
+                });
+            }
+        }
+    }
+
+    // CONFIGURAÇÃO DO CLIQUE NA SETA DE NAVEGAÇÃO (JÁ EXISTENTE)
+    private void setupProfileNavigationIcon() {
+        View headerDetailInclude = findViewById(R.id.profile_detail_header);
+
+        if (headerDetailInclude != null) {
+            ImageView navigateIcon = headerDetailInclude.findViewById(R.id.icon_navigate_profile);
+
+            if (navigateIcon != null) {
+                navigateIcon.setOnClickListener(v -> {
+                    // Inicia a MainActivity
+                    Intent intent = new Intent(Profile.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
+                });
             }
         }
     }
@@ -79,22 +115,13 @@ public class Profile extends AppCompatActivity {
         setupOption(R.id.option_sobre_nos, R.drawable.info_circle_foreground, R.string.sobre_nos);
     }
 
-    /**
-     * Encontra o item de include, busca seus componentes e define o texto e ícone.
-     * @param includeId ID do include no layout principal (e.g., R.id.option_historico).
-     * @param iconResId ID do drawable do ícone (e.g., R.drawable.ic_history_time_foreground).
-     * @param textResId ID da string do texto (e.g., R.string.historico).
-     */
     private void setupOption(int includeId, int iconResId, int textResId) {
-        // Encontra o item inteiro (CardView)
         View optionView = findViewById(includeId);
 
         if (optionView != null) {
-            // Encontra o TextView e o ImageView DENTRO do item_profile_option.xml
             TextView titleView = optionView.findViewById(R.id.option_title);
             ImageView iconView = optionView.findViewById(R.id.option_icon);
 
-            // Define o texto e o ícone
             if (titleView != null) {
                 titleView.setText(textResId);
             }
