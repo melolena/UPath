@@ -46,6 +46,7 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
+                    android:id="@+id/text_title_card"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Orientador Vocacional"
@@ -112,6 +113,46 @@
                     android:text="Enviar"
                     android:textAllCaps="false"
                     app:cornerRadius="8dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_resultado"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="24dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/divider"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_message_received"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:id="@+id/text_resultado_final"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Carregando..."
+                        android:textColor="#1F2937"
+                        android:textSize="16sp"
+                        android:lineSpacingExtra="4dp"/>
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_restart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fazer o teste novamente"
+                    android:backgroundTint="#8B5CF6"
+                    android:layout_marginTop="32dp"
+                    android:paddingHorizontal="24dp"
+                    app:cornerRadius="8dp"
+                    android:textAllCaps="false"/>
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

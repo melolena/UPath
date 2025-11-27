@@ -1,53 +1,47 @@
 package com.example.upath;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.MenuItem;
-
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class BottomNavHelper {
 
-    public static void setupNavigation(BottomNavigationView navigationView, int currentItemId) {
+    public static void setupNavigation(Context context, BottomNavigationView bottomNavigationView, int selectedItemId) {
 
-        // Seleciona o item atual visualmente
-        navigationView.setSelectedItemId(currentItemId);
+        // Marca o ícone correto como selecionado
+        bottomNavigationView.setSelectedItemId(selectedItemId);
 
-        navigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
+        bottomNavigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
                 int itemId = item.getItemId();
-                Context context = navigationView.getContext();
 
-                // Evita recarregar a Activity atual
-                if (itemId == currentItemId) return true;
-
-                Class<?> destinationActivity = null;
-
-                // Substituindo switch-case por if-else
-                if (itemId == R.id.nav_home) {
-                    destinationActivity = HomeUser.class;
-                } else if (itemId == R.id.nav_test) {
-                    destinationActivity = ActivityTeste.class;
-                } else if (itemId == R.id.nav_profile) {
-                    destinationActivity = Profile.class;
+                // Se clicou no item que já está selecionado, não faz nada
+                if (itemId == selectedItemId) {
+                    return true;
                 }
 
-                if (destinationActivity != null) {
-                    Intent intent = new Intent(context, destinationActivity);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                if (itemId == R.id.nav_home) {
+                    Intent intent = new Intent(context, HomeUser.class);
                     context.startActivity(intent);
+                    if (context instanceof Activity) ((Activity) context).finish();
+                    return true;
 
-                    if (context instanceof AppCompatActivity) {
-                        AppCompatActivity currentActivity = (AppCompatActivity) context;
-                        if (destinationActivity != currentActivity.getClass()) {
-                            currentActivity.finish();
-                        }
-                    }
+                } else if (itemId == R.id.nav_test) {
+                    Intent intent = new Intent(context, ActivityTeste.class);
+                    context.startActivity(intent);
+                    if (context instanceof Activity) ((Activity) context).finish();
+                    return true;
+
+                } else if (itemId == R.id.nav_simulation) {
+                    // --- MUDANÇA AQUI: Redireciona para a Simulação ---
+                    // Troque 'ActivitySimulation.class' pelo nome real da sua classe de simulação
+                    Intent intent = new Intent(context, ActivitySimulation.class);
+                    context.startActivity(intent);
+                    if (context instanceof Activity) ((Activity) context).finish();
                     return true;
                 }
 

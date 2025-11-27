@@ -8,16 +8,24 @@ import retrofit2.http.POST;
 
 public interface ChatService {
 
+    // --- ROTAS DO CHAT (ActivityTeste) ---
     @POST("/chat")
     Call<ChatApiResponse> sendMessage(@Body ChatRequest request);
 
     @GET("/resultado")
     Call<ResultResponse> getResult();
 
-    // Essa classe interna PODE ficar aqui, pois é específica da resposta do chat
+    // --- NOVA ROTA DA SIMULAÇÃO (ActivitySimulation) ---
+    // Esta é a linha que faltava para o erro sumir!
+    @POST("/simular")
+    Call<SimulationResponse> realizarSimulacao(@Body SimulationRequest request);
+
+
+    // --- CLASSE INTERNA (Resposta do Chat) ---
     class ChatApiResponse {
         public String reply;
-        @SerializedName("final")
+
+        @SerializedName("final") // Mapeia o campo JSON "final" para "isFinal"
         public boolean isFinal;
     }
 }

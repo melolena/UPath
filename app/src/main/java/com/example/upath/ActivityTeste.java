@@ -1,15 +1,20 @@
 package com.example.upath;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge; // Importante para manter o padrão visual
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,57 +27,106 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ActivityTeste extends AppCompatActivity {
 
-    // --- Views da Tela ---
+    // --- Views ---
     private RecyclerView recyclerChat;
     private EditText editMessage;
     private Button btnSend;
+    private LinearLayout inputContainer;
+    private LinearLayout layoutResultado;
+    private TextView textResultadoFinal;
+    private Button btnRestart;
+    private TextView textTitleCard;
 
-    // --- Lógica do Chat ---
+    // --- Lógica ---
     private ChatAdapter adapter;
     private List<Message> messageList;
     private ChatService chatService;
 
-    // --- Configuração de Rede ---
-    // USE "http://10.0.2.2:3000/" SE ESTIVER NO EMULADOR
-    // USE "http://SEU_IP_PC:3000/" SE ESTIVER NO CELULAR FÍSICO (Ex: 192.168.0.10)
+    // REDE (Use 10.0.2.2 para Emulador)
     private static final String BASE_URL = "http://10.0.2.2:3000/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Certifique-se de que seu XML se chama activity_teste ou mude aqui
+        EdgeToEdge.enable(this); // Adicionado para consistência com a Home
         setContentView(R.layout.activity_teste);
 
-        // 1. Inicializar os componentes da tela
+        // Inicialização de Views
         recyclerChat = findViewById(R.id.recycler_chat);
         editMessage = findViewById(R.id.edit_message);
         btnSend = findViewById(R.id.btn_send);
+        inputContainer = findViewById(R.id.input_container);
+        layoutResultado = findViewById(R.id.layout_resultado);
+        textResultadoFinal = findViewById(R.id.text_resultado_final);
+        btnRestart = findViewById(R.id.btn_restart);
+        textTitleCard = findViewById(R.id.text_title_card);
 
-        // 2. Configurar a lista de mensagens (RecyclerView)
+        // Setup Lista
         messageList = new ArrayList<>();
         adapter = new ChatAdapter(messageList);
         recyclerChat.setLayoutManager(new LinearLayoutManager(this));
         recyclerChat.setAdapter(adapter);
 
-        // 3. Configurar o Retrofit (Conexão com o servidor)
-        configurarRetrofit(); // <--- A CHAMADA ESTÁ CORRETA AQUI
-
-        // 4. Iniciar conversa automaticamente (Envia "Começar" para o servidor)
+        // Rede e Chat
+        configurarRetrofit();
         iniciarChatNoServidor();
 
-        // 5. Ação do Botão Enviar
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String mensagemDigitada = editMessage.getText().toString().trim();
-                if (!mensagemDigitada.isEmpty()) {
-                    enviarMensagemUsuario(mensagemDigitada);
-                }
-            }
+        // Botões
+        btnSend.setOnClickListener(v -> {
+            String msg = editMessage.getText().toString().trim();
+            if (!msg.isEmpty()) enviarMensagemUsuario(msg);
         });
+
+        btnRestart.setOnClickListener(v -> reiniciarTeste());
+
+        // Navegação
+        configurarBottomNav();
     }
 
-    // CORREÇÃO FEITA AQUI: O nome deve ser igual ao chamado no onCreate
+    private void configurarBottomNav() {
+        try {
+            View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
+            if (bottomNavInclude != null) {
+                BottomNavigationView bottomNavigationView = bottomNavInclude.findViewById(R.id.bottom_navigation);
+                if (bottomNavigationView != null) {
+                    // ATENÇÃO: Se o seu Helper pede 'Context', use 'this'. Se não, remova o 'this'.
+                    // Aqui estou assumindo que você atualizou o Helper para aceitar Context (como vimos no exemplo anterior)
+                    BottomNavHelper.setupNavigation(this, bottomNavigationView, R.id.nav_test);
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ActivityTeste", "Erro no menu: " + e.getMessage());
+        }
+    }
+
+    // --- MÉTODOS VISUAIS ---
+
+    private void mostrarTelaResultado(String resultado) {
+        recyclerChat.setVisibility(View.GONE);
+        inputContainer.setVisibility(View.GONE);
+        layoutResultado.setVisibility(View.VISIBLE);
+        textResultadoFinal.setText(resultado);
+        textTitleCard.setText("Seu Resultado");
+    }
+
+    private void reiniciarTeste() {
+        messageList.clear();
+        adapter.notifyDataSetChanged();
+        layoutResultado.setVisibility(View.GONE);
+        recyclerChat.setVisibility(View.VISIBLE);
+        inputContainer.setVisibility(View.VISIBLE);
+        textTitleCard.setText("Orientador Vocacional");
+        iniciarChatNoServidor();
+    }
+
+    private void adicionarMensagemNaTela(String texto, boolean isUser) {
+        messageList.add(new Message(texto, isUser));
+        adapter.notifyItemInserted(messageList.size() - 1);
+        recyclerChat.smoothScrollToPosition(messageList.size() - 1);
+    }
+
+    // --- MÉTODOS DE REDE ---
+
     private void configurarRetrofit() {
         try {
             Retrofit retrofit = new Retrofit.Builder()
@@ -81,91 +135,58 @@ public class ActivityTeste extends AppCompatActivity {
                     .build();
             chatService = retrofit.create(ChatService.class);
         } catch (Exception e) {
-            Toast.makeText(this, "Erro ao iniciar Retrofit: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Erro Retrofit: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void iniciarChatNoServidor() {
-        // Envia a palavra chave "Começar" (invisível para o usuário) para resetar o chat no Node
-        Call<ChatService.ChatApiResponse> call = chatService.sendMessage(new ChatRequest("Começar"));
-
-        call.enqueue(new Callback<ChatService.ChatApiResponse>() {
+        chatService.sendMessage(new ChatRequest("Começar")).enqueue(new Callback<ChatService.ChatApiResponse>() {
             @Override
             public void onResponse(Call<ChatService.ChatApiResponse> call, Response<ChatService.ChatApiResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // O servidor responde com a 1ª pergunta
                     adicionarMensagemNaTela(response.body().reply, false);
                 }
             }
-
             @Override
             public void onFailure(Call<ChatService.ChatApiResponse> call, Throwable t) {
-                adicionarMensagemNaTela("Erro de conexão. Verifique se o server.js está rodando.", false);
-                Log.e("ActivityTeste", "Erro API: " + t.getMessage());
+                adicionarMensagemNaTela("Erro de conexão.", false);
             }
         });
     }
 
     private void enviarMensagemUsuario(String texto) {
-        // 1. Mostra a mensagem do usuário na tela imediatamente
         adicionarMensagemNaTela(texto, true);
-        editMessage.setText(""); // Limpa o campo
+        editMessage.setText("");
 
-        // 2. Envia para o servidor
-        Call<ChatService.ChatApiResponse> call = chatService.sendMessage(new ChatRequest(texto));
-
-        call.enqueue(new Callback<ChatService.ChatApiResponse>() {
+        chatService.sendMessage(new ChatRequest(texto)).enqueue(new Callback<ChatService.ChatApiResponse>() {
             @Override
             public void onResponse(Call<ChatService.ChatApiResponse> call, Response<ChatService.ChatApiResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String respostaIA = response.body().reply;
+                    String resposta = response.body().reply;
                     boolean acabou = response.body().isFinal;
-
-                    // Mostra resposta da IA
-                    adicionarMensagemNaTela(respostaIA, false);
-
-                    // Se o servidor disse que acabou (final: true), busca o resultado
-                    if (acabou) {
-                        buscarResultadoFinal();
-                    }
+                    adicionarMensagemNaTela(resposta, false);
+                    if (acabou) buscarResultadoFinal();
                 }
             }
-
             @Override
             public void onFailure(Call<ChatService.ChatApiResponse> call, Throwable t) {
-                adicionarMensagemNaTela("Falha ao enviar mensagem.", false);
+                adicionarMensagemNaTela("Erro ao enviar.", false);
             }
         });
     }
 
     private void buscarResultadoFinal() {
-        // Chama a rota /resultado do servidor
         chatService.getResult().enqueue(new Callback<ResultResponse>() {
             @Override
             public void onResponse(Call<ResultResponse> call, Response<ResultResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String resultado = response.body().getResultado();
-                    // Mostra o resultado final em destaque
-                    adicionarMensagemNaTela("🎓 RESULTADO FINAL:\n\n" + resultado, false);
-
-                    // Opcional: Desabilitar o chat pois acabou
-                    editMessage.setEnabled(false);
-                    btnSend.setEnabled(false);
-                    editMessage.setHint("Teste finalizado.");
+                    mostrarTelaResultado(response.body().getResultado());
                 }
             }
-
             @Override
             public void onFailure(Call<ResultResponse> call, Throwable t) {
-                adicionarMensagemNaTela("Erro ao carregar o resultado.", false);
+                adicionarMensagemNaTela("Erro ao pegar resultado.", false);
             }
         });
-    }
-
-    // Método auxiliar para atualizar a UI sem repetir código
-    private void adicionarMensagemNaTela(String texto, boolean enviadoPeloUsuario) {
-        messageList.add(new Message(texto, enviadoPeloUsuario));
-        adapter.notifyItemInserted(messageList.size() - 1);
-        recyclerChat.smoothScrollToPosition(messageList.size() - 1);
     }
 }

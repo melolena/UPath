@@ -24,7 +24,7 @@ public class Profile extends AppCompatActivity {
 
         // --- 1. CONFIGURAÇÃO BASE DE SEGURANÇA E INSETS ---
         setupInsets();
-        setupBottomNav();
+
 
         // --- 2. CONFIGURAÇÃO DA LISTA DE OPÇÕES ---
         setupProfileOptions();
@@ -47,16 +47,6 @@ public class Profile extends AppCompatActivity {
         }
     }
 
-    private void setupBottomNav() {
-        View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
-        if (bottomNavInclude != null) {
-            BottomNavigationView bottomNavigationView = bottomNavInclude.findViewById(R.id.bottom_navigation);
-
-            if (bottomNavigationView != null) {
-                com.example.upath.BottomNavHelper.setupNavigation(bottomNavigationView, R.id.nav_profile);
-            }
-        }
-    }
 
     // --- MÉTODOS DE NAVEGAÇÃO DO HEADER ---
 
