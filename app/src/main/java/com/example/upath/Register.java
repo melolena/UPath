@@ -7,7 +7,7 @@ import android.text.TextWatcher;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast; // Importado para exibir a mensagem
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,15 +19,21 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class Register extends AppCompatActivity {
 
-    // Declaração de todas as Views do formulário
-    private EditText editNome;
-    private EditText editEmail;
-    private EditText editConfirmEmail;
-    private TextInputEditText editPassword;
-    private TextInputEditText editConfirmPassword;
+    private EditText editNome, editEmail, editConfirmEmail;
+    private TextInputEditText editPassword, editConfirmPassword;
     private MaterialButton botaoCadastrar;
+
+    // URL do Backend
+    // Lembre-se: Use 10.0.2.2 para emulador ou o IP da máquina para celular físico
+    private static final String BASE_URL = "http://10.0.2.2:8001/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,35 +41,25 @@ public class Register extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_register);
 
-        // 1. Encontrar e atribuir as views pelos seus IDs
+        // 1. Inicializar Views
         editNome = findViewById(R.id.nome);
         editEmail = findViewById(R.id.email);
         editConfirmEmail = findViewById(R.id.confirmEmail);
 
-        // Encontrar os TextInputEditText dentro dos seus TextInputLayouts
-        TextInputLayout inputPasswordLayout = findViewById(R.id.input_password_layout);
-        editPassword = inputPasswordLayout.findViewById(R.id.password);
+        TextInputLayout inputPass = findViewById(R.id.input_password_layout);
+        editPassword = inputPass.findViewById(R.id.password);
 
-        TextInputLayout inputConfirmPasswordLayout = findViewById(R.id.input_confirm_password_layout);
-        editConfirmPassword = inputConfirmPasswordLayout.findViewById(R.id.confirmPassword);
+        TextInputLayout inputConfirmPass = findViewById(R.id.input_confirm_password_layout);
+        editConfirmPassword = inputConfirmPass.findViewById(R.id.confirmPassword);
 
         botaoCadastrar = findViewById(R.id.botaoCadastrar);
-
-        // 2. Desabilitar o botão no início
         botaoCadastrar.setEnabled(false);
 
-        // 3. Crie e aplique o TextWatcher a todos os campos relevantes
+        // 2. TextWatcher para habilitar botão
         TextWatcher watcher = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                checkFieldsForEnableButton();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { checkFields(); }
+            @Override public void afterTextChanged(Editable s) {}
         };
 
         editNome.addTextChangedListener(watcher);
@@ -72,7 +68,7 @@ public class Register extends AppCompatActivity {
         editPassword.addTextChangedListener(watcher);
         editConfirmPassword.addTextChangedListener(watcher);
 
-
+        // 3. Layout Edge-to-Edge
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -80,85 +76,91 @@ public class Register extends AppCompatActivity {
         });
     }
 
-    /**
-     * Lógica para habilitar/desabilitar o botão de cadastro em tempo real.
-     */
-    private void checkFieldsForEnableButton() {
-        String nomeText = editNome.getText().toString().trim();
-        String emailText = editEmail.getText().toString().trim();
-        String confirmEmailText = editConfirmEmail.getText().toString().trim();
-        String passwordText = editPassword.getText().toString().trim();
-        String confirmPasswordText = editConfirmPassword.getText().toString().trim();
+    private void checkFields() {
+        String nome = editNome.getText().toString().trim();
+        String email = editEmail.getText().toString().trim();
+        String confEmail = editConfirmEmail.getText().toString().trim();
+        String pass = editPassword.getText().toString().trim();
+        String confPass = editConfirmPassword.getText().toString().trim();
 
-        // 1. Verificar se o NOME está preenchido
-        boolean isNameFilled = nomeText.length() > 0;
+        boolean isValid = !nome.isEmpty() &&
+                !email.isEmpty() &&
+                !confEmail.isEmpty() &&
+                !pass.isEmpty() &&
+                !confPass.isEmpty() &&
+                Patterns.EMAIL_ADDRESS.matcher(email).matches() &&
+                pass.length() >= 8;
 
-        // 2. Verificar se E-MAIL e CONFIRMAR E-MAIL estão preenchidos
-        boolean emailFieldsFilled = emailText.length() > 0 && confirmEmailText.length() > 0;
-
-        // 3. Verificar se SENHA e REPETIR SENHA estão preenchidos
-        boolean passwordFieldsFilled = passwordText.length() > 0 && confirmPasswordText.length() > 0;
-
-        // 4. Validações adicionais (Formato de E-mail e Tamanho Mínimo da Senha)
-        boolean isEmailFormatValid = Patterns.EMAIL_ADDRESS.matcher(emailText).matches();
-        boolean isPasswordLengthValid = passwordText.length() >= 8;
-
-        // Habilita o botão APENAS se todos os requisitos de PREENCHIMENTO e FORMATO forem atendidos
-        boolean canEnableButton = isNameFilled &&
-                emailFieldsFilled &&
-                passwordFieldsFilled &&
-                isEmailFormatValid &&
-                isPasswordLengthValid;
-
-        botaoCadastrar.setEnabled(canEnableButton);
+        botaoCadastrar.setEnabled(isValid);
     }
 
-    /**
-     * Executado quando o botão "Cadastrar" é pressionado.
-     */
     public void registerUser(View view) {
-        // Se o botão não estiver habilitado, a lógica não deve avançar.
-        if (!botaoCadastrar.isEnabled()) {
-            Toast.makeText(this, "Preencha todos os campos e valide os formatos.", Toast.LENGTH_LONG).show();
+        String nome = editNome.getText().toString().trim();
+        String email = editEmail.getText().toString().trim();
+        String confEmail = editConfirmEmail.getText().toString().trim();
+        String pass = editPassword.getText().toString().trim();
+        String confPass = editConfirmPassword.getText().toString().trim();
+
+        if (!email.equals(confEmail)) {
+            Toast.makeText(this, "Os e-mails não coincidem!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!pass.equals(confPass)) {
+            Toast.makeText(this, "As senhas não coincidem!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String emailText = editEmail.getText().toString().trim();
-        String confirmEmailText = editConfirmEmail.getText().toString().trim();
-        String passwordText = editPassword.getText().toString().trim();
-        String confirmPasswordText = editConfirmPassword.getText().toString().trim();
+        // --- CHAMADA PARA O SERVIDOR ---
+        botaoCadastrar.setEnabled(false);
+        botaoCadastrar.setText("Cadastrando...");
 
-        // 1. Validação crítica: E-mails devem ser iguais
-        if (!emailText.equals(confirmEmailText)) {
-            Toast.makeText(this, "Erro: Os e-mails não correspondem.", Toast.LENGTH_LONG).show();
-            return;
-        }
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
-        // 2. Validação crítica: Senhas devem ser iguais
-        if (!passwordText.equals(confirmPasswordText)) {
-            Toast.makeText(this, "Erro: As senhas não correspondem.", Toast.LENGTH_LONG).show();
-            return;
-        }
+        AuthService service = retrofit.create(AuthService.class);
 
-        // Se passar por todas as validações: Cadastro realizado com sucesso
+        // --- CORREÇÃO AQUI ---
+        // Agora passamos os 5 parâmetros que o Python espera (incluindo as confirmações)
+        RegisterRequest request = new RegisterRequest(nome, email, confEmail, pass, confPass);
 
-        Toast.makeText(this, "Cadastro realizado com sucesso!", Toast.LENGTH_LONG).show();
+        service.cadastrar(request).enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                botaoCadastrar.setEnabled(true);
+                botaoCadastrar.setText("Cadastrar");
 
-        // Redireciona para a MainActivity
-        Intent intent = new Intent(this, MainActivity.class);
+                if (response.isSuccessful()) {
+                    Toast.makeText(Register.this, "Cadastro realizado! Faça login.", Toast.LENGTH_LONG).show();
 
-        // Limpa a pilha de atividades para que o usuário não possa voltar
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        finish(); // Finaliza a tela de Cadastro
+                    // Vai para a tela de Login
+                    Intent intent = new Intent(Register.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    // Trata erro (ex: email já existe ou validação falhou)
+                    if (response.code() == 422) {
+                        Toast.makeText(Register.this, "Erro de validação (422). Verifique os dados.", Toast.LENGTH_SHORT).show();
+                    } else if (response.code() == 409) {
+                        Toast.makeText(Register.this, "E-mail já cadastrado.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(Register.this, "Erro no cadastro: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
 
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                botaoCadastrar.setEnabled(true);
+                botaoCadastrar.setText("Cadastrar");
+                Toast.makeText(Register.this, "Erro de conexão.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    /**
-     * Executado quando a seta de voltar é pressionada.
-     */
     public void goToMainActivity(View view) {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
+        finish();
     }
 }

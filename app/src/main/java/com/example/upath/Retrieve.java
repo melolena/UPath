@@ -17,6 +17,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 
+// Se no futuro tiver backend, importe Retrofit aqui
+// import retrofit2.Call;
+// import retrofit2.Callback;
+// import retrofit2.Response;
+
 public class Retrieve extends AppCompatActivity {
 
     private EditText editEmailRecuperacao;
@@ -28,14 +33,14 @@ public class Retrieve extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_retrieve);
 
-        // Vincular as views
+        // 1. Inicializar Views
         editEmailRecuperacao = findViewById(R.id.email);
         buttonEnviarEmail = findViewById(R.id.buttonEnviarEmail);
 
-        // Estado inicial do botão desabilitado
+        // 2. Estado inicial do botão (Desabilitado)
         buttonEnviarEmail.setEnabled(false);
 
-        // Verifica o e-mail em tempo real
+        // 3. Monitoramento do campo de e-mail
         editEmailRecuperacao.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -49,7 +54,7 @@ public class Retrieve extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
 
-        // Ajuste para modo EdgeToEdge
+        // 4. Ajuste Visual (EdgeToEdge)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -57,46 +62,64 @@ public class Retrieve extends AppCompatActivity {
         });
     }
 
+    // Verifica se o e-mail é válido para habilitar o botão
     private void checkEmailField() {
         String emailText = editEmailRecuperacao.getText().toString().trim();
-
         boolean isEmailFilled = !emailText.isEmpty();
         boolean isEmailValid = Patterns.EMAIL_ADDRESS.matcher(emailText).matches();
 
         buttonEnviarEmail.setEnabled(isEmailFilled && isEmailValid);
+
+        // Feedback visual de erro (opcional)
+        if (isEmailFilled && !isEmailValid) {
+            editEmailRecuperacao.setError("E-mail inválido");
+        } else {
+            editEmailRecuperacao.setError(null);
+        }
     }
 
     /**
-     * Método executado ao clicar no botão "Enviar".
-     * Vinculado no XML via android:onClick="RecuperarConta"
+     * Executado ao clicar no botão "Enviar" (Vinculado via android:onClick="RecuperarConta" no XML)
      */
     public void RecuperarConta(View view) {
         String emailText = editEmailRecuperacao.getText().toString().trim();
 
-        // Impede o envio se o botão estiver desabilitado
         if (!buttonEnviarEmail.isEnabled()) {
-            Toast.makeText(this, "Informe um e-mail válido para recuperar sua conta.", Toast.LENGTH_LONG).show();
             return;
         }
 
-        // Simula o envio do e-mail de recuperação
-        Toast.makeText(this, "E-mail de recuperação enviado para: " + emailText, Toast.LENGTH_LONG).show();
+        // --- FUTURA INTEGRAÇÃO COM BACKEND ---
+        // Quando seu Python tiver a rota (ex: /auth/forgot-password), o código seria:
+        /*
+        AuthService service = ... (Retrofit config)
+        service.recuperarSenha(new RecoveryRequest(emailText)).enqueue(new Callback... {
+            onResponse -> "Email enviado com sucesso!"
+            onFailure -> "Erro ao enviar"
+        });
+        */
 
-        // Aguarda brevemente e redireciona para a tela de login
+        // --- POR ENQUANTO: SIMULAÇÃO ---
+
+        // Feedback visual
+        buttonEnviarEmail.setEnabled(false);
+        buttonEnviarEmail.setText("Enviando...");
+
+        // Simula um tempo de rede (1.5 segundos)
         buttonEnviarEmail.postDelayed(() -> {
+            Toast.makeText(Retrieve.this, "Se o e-mail existir, você receberá um link.", Toast.LENGTH_LONG).show();
+
+            // Volta para o Login
             Intent intent = new Intent(Retrieve.this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            finish(); // Fecha a tela de recuperação
-        }, 1500); // 1,5 segundos de delay para o usuário ler o Toast
+            finish();
+        }, 1500);
     }
 
     /**
-     * Método para retornar à tela principal (login) se clicar em "voltar".
+     * Botão Voltar
      */
     public void goToMainActivity(View view) {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
+        finish(); // Apenas fecha a tela atual, revelando o Login que está embaixo
     }
 }
