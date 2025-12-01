@@ -3,8 +3,8 @@ package com.example.upath;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +12,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class Profile extends AppCompatActivity {
@@ -22,24 +23,16 @@ public class Profile extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_profile);
 
-        // --- 1. CONFIGURAÇÃO BASE DE SEGURANÇA E INSETS ---
         setupInsets();
-
-
-        // --- 2. CONFIGURAÇÃO DA LISTA DE OPÇÕES ---
+        setupHeaderDetail();
         setupProfileOptions();
-
-        // --- 3. CONFIGURAÇÃO DOS CLIQUES DO HEADER ---
-        setupProfileNavigationIcon(); // Seta ao lado do email (leva para MainActivity)
-        setupEditIconClickListener(); // Ícone de lápis (leva para EditProfile)
+        configurarBottomNav();
     }
 
-    // --- MÉTODOS DE SETUP BÁSICOS ---
-
     private void setupInsets() {
-        View mainLayout = findViewById(R.id.main);
-        if (mainLayout != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
+        View main = findViewById(R.id.main);
+        if (main != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
                 return insets;
@@ -47,77 +40,65 @@ public class Profile extends AppCompatActivity {
         }
     }
 
+    private void setupHeaderDetail() {
 
-    // --- MÉTODOS DE NAVEGAÇÃO DO HEADER ---
+        View header = findViewById(R.id.profile_detail_header);
+        if (header == null) return;
 
-    // CONFIGURAÇÃO DO CLIQUE NO ÍCONE DE EDIÇÃO (CORREÇÃO ADICIONADA)
-    private void setupEditIconClickListener() {
-        View headerDetailInclude = findViewById(R.id.profile_detail_header);
+        ImageView profileImg = header.findViewById(R.id.profile_image);
+        TextView name = header.findViewById(R.id.text_user_name);
+        TextView email = header.findViewById(R.id.text_user_email);
 
-        if (headerDetailInclude != null) {
-            ImageView editIcon = headerDetailInclude.findViewById(R.id.icon_edit);
+        ImageView edit = header.findViewById(R.id.icon_edit);
+        ImageView back = header.findViewById(R.id.icon_navigate_profile);
 
-            if (editIcon != null) {
-                editIcon.setOnClickListener(v -> {
-                    // Inicia a Activity EditProfile
-                    Intent intent = new Intent(Profile.this, EditProfile.class);
-                    startActivity(intent);
-                });
-            }
+        var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
+
+        String nome = prefs.getString("USER_NAME", "Usuário");
+        String foto = prefs.getString("USER_PHOTO", null);
+        String emailUser = prefs.getString("USER_EMAIL", "email@email.com");
+
+        name.setText(nome);
+        email.setText(emailUser);
+
+        if (foto != null) {
+            Glide.with(this).load(foto).into(profileImg);
         }
+
+        edit.setOnClickListener(v ->
+                startActivity(new Intent(this, EditProfile.class))
+        );
+
+        back.setOnClickListener(v -> finish());
     }
-
-    // CONFIGURAÇÃO DO CLIQUE NA SETA DE NAVEGAÇÃO (JÁ EXISTENTE)
-    private void setupProfileNavigationIcon() {
-        View headerDetailInclude = findViewById(R.id.profile_detail_header);
-
-        if (headerDetailInclude != null) {
-            ImageView navigateIcon = headerDetailInclude.findViewById(R.id.icon_navigate_profile);
-
-            if (navigateIcon != null) {
-                navigateIcon.setOnClickListener(v -> {
-                    // Inicia a MainActivity
-                    Intent intent = new Intent(Profile.this, MainActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    finish();
-                });
-            }
-        }
-    }
-
-    // --- MÉTODOS DE CONFIGURAÇÃO DA LISTA DE OPÇÕES ---
 
     private void setupProfileOptions() {
-        // 1. RESULTADOS
         setupOption(R.id.option_resultados, R.drawable.ic_clipboard_check_foreground, R.string.resultado);
-
-        // 2. HISTÓRICO
         setupOption(R.id.option_historico, R.drawable.ic_clock_foreground, R.string.historico);
-
-        // 3. SALVOS
         setupOption(R.id.option_salvos, R.drawable.save_foreground, R.string.salvos);
-
-        // 4. PLANOS
         setupOption(R.id.option_planos, R.drawable.star_foreground, R.string.planos);
-
-        // 5. SOBRE NÓS
         setupOption(R.id.option_sobre_nos, R.drawable.info_circle_foreground, R.string.sobre_nos);
     }
 
-    private void setupOption(int includeId, int iconResId, int textResId) {
-        View optionView = findViewById(includeId);
+    private void setupOption(int id, int icon, int textId) {
+        View v = findViewById(id);
+        if (v != null) {
+            ((ImageView) v.findViewById(R.id.option_icon)).setImageResource(icon);
+            ((TextView) v.findViewById(R.id.option_title)).setText(textId);
+        }
+    }
 
-        if (optionView != null) {
-            TextView titleView = optionView.findViewById(R.id.option_title);
-            ImageView iconView = optionView.findViewById(R.id.option_icon);
+    private void configurarBottomNav() {
+        try {
+            View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
+            if (bottomNavInclude != null) {
+                BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
 
-            if (titleView != null) {
-                titleView.setText(textResId);
+                // Nenhum item deve ficar ativo
+                BottomNavHelper.setupNavigation(this, nav, -1);
             }
-            if (iconView != null) {
-                iconView.setImageResource(iconResId);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

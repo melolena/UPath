@@ -6,42 +6,53 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-// Importante: Usar AppCompatActivity para compatibilidade com Glide e novos Androids
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 
 public class ProfileHeader {
 
     public static void setup(AppCompatActivity activity) {
 
-        // 1. Encontra o layout do cabeçalho na tela
+        // Encontra o include do header
         View header = activity.findViewById(R.id.profile_header);
-        if (header == null) return; // Se não achar o header, para aqui para não travar
+        if (header == null) return;
 
-        // 2. Encontra os componentes dentro do header
+        // Views internas
         CardView cardProfile = header.findViewById(R.id.cardProfile);
         ImageView profileImage = header.findViewById(R.id.profileImage);
-        TextView greetingText = header.findViewById(R.id.greetingText);
+        TextView greetingTitle = header.findViewById(R.id.greetingTitle);
+        TextView greetingSubtitle = header.findViewById(R.id.greetingSubtitle);
 
-        // 3. Carrega os dados salvos (Nome e Foto)
+        // Recupera dados salvos
         SharedPreferences prefs = activity.getSharedPreferences("UPATH_PREFS", AppCompatActivity.MODE_PRIVATE);
+
         String nome = prefs.getString("USER_NAME", "Estudante");
+        String email = prefs.getString("USER_EMAIL", "email@email.com");
         String foto = prefs.getString("USER_PHOTO", null);
 
-        greetingText.setText("Olá, " + nome + "!");
+        // Define textos
+        greetingTitle.setText("Olá, " + nome + "!");
+        greetingSubtitle.setText("O que vai ser hoje?");
 
-        if (foto != null) {
-            Glide.with(activity).load(foto).into(profileImage);
+        // Carrega a foto com Glide
+        if (foto != null && !foto.isEmpty()) {
+            Glide.with(activity)
+                    .load(foto)
+                    .transform(new CircleCrop())
+                    .placeholder(R.drawable.user_default_foreground)
+                    .error(R.drawable.user_default_foreground)
+                    .into(profileImage);
+        } else {
+            profileImage.setImageResource(R.drawable.user_default_foreground);
         }
 
-        // 4. AÇÃO DE CLIQUE (AQUI ESTÁ O QUE VOCÊ PEDIU)
-        // Quando clicar no Card da foto -> Vai para a Activity Profile
+        // Ação de clique -> abre tela de Perfil
         cardProfile.setOnClickListener(v -> {
             Intent intent = new Intent(activity, Profile.class);
             activity.startActivity(intent);
         });
-
     }
 }

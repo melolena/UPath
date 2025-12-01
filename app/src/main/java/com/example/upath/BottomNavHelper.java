@@ -4,49 +4,63 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.MenuItem;
+
 import androidx.annotation.NonNull;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class BottomNavHelper {
 
     public static void setupNavigation(Context context, BottomNavigationView bottomNavigationView, int selectedItemId) {
 
-        // Marca o ícone correto como selecionado
-        bottomNavigationView.setSelectedItemId(selectedItemId);
+        // Caso não exista item selecionado (telas como Profile)
+        if (selectedItemId == -1) {
+            // Desmarca todos para não aparecer nada ativo
+            for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
+                bottomNavigationView.getMenu().getItem(i).setChecked(false);
+            }
+        } else {
+            bottomNavigationView.setSelectedItemId(selectedItemId);
+        }
 
         bottomNavigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
                 int itemId = item.getItemId();
 
-                // Se clicou no item que já está selecionado, não faz nada
-                if (itemId == selectedItemId) {
+                // Se clicou no item já ativo
+                if (itemId == selectedItemId && selectedItemId != -1) {
                     return true;
                 }
 
                 if (itemId == R.id.nav_home) {
                     Intent intent = new Intent(context, HomeUser.class);
                     context.startActivity(intent);
-                    if (context instanceof Activity) ((Activity) context).finish();
+                    finishActivity(context);
                     return true;
 
                 } else if (itemId == R.id.nav_test) {
                     Intent intent = new Intent(context, ActivityTeste.class);
                     context.startActivity(intent);
-                    if (context instanceof Activity) ((Activity) context).finish();
+                    finishActivity(context);
                     return true;
 
                 } else if (itemId == R.id.nav_simulation) {
-                    // --- MUDANÇA AQUI: Redireciona para a Simulação ---
-                    // Troque 'ActivitySimulation.class' pelo nome real da sua classe de simulação
                     Intent intent = new Intent(context, ActivitySimulation.class);
                     context.startActivity(intent);
-                    if (context instanceof Activity) ((Activity) context).finish();
+                    finishActivity(context);
                     return true;
                 }
 
                 return false;
             }
         });
+    }
+
+    private static void finishActivity(Context context) {
+        if (context instanceof Activity) {
+            ((Activity) context).finish();
+        }
     }
 }
