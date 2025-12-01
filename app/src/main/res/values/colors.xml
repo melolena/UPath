@@ -5,4 +5,7 @@
     <color name="green_active">#10B981</color>
     <color name="gray_inactive">#E5E7EB</color>
     <color name="blue">#3B82F6</color>
+    <color name="button_disabled_tint">#E5E7EB</color>
+    <color name="button_cadastro_tint">#10B981</color>
+
 </resources>

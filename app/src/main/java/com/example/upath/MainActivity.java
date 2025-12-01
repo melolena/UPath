@@ -1,6 +1,7 @@
 package com.example.upath;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,9 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private TextInputEditText editPassword;
     private Button buttonLogin;
 
-    // URL do seu Backend Python (FastAPI)
-    // Se for emulador: http://10.0.2.2:8000/
-    // Se for celular físico: http://SEU_IP_DO_PC:8000/
+    // URL DO BACKEND
     private static final String BASE_URL = "http://10.0.2.2:8001/";
 
     @Override
@@ -38,117 +37,114 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. Mapeamento das Views
+        // Mapeamento das Views
         editEmail = findViewById(R.id.edit_email);
         TextInputLayout inputPasswordLayout = findViewById(R.id.input_password_layout);
-        editPassword = findViewById(R.id.edit_password); // Assumindo que o ID direto no XML é esse
+        editPassword = findViewById(R.id.edit_password);
         buttonLogin = findViewById(R.id.botao_logar);
 
-        // Desativa o botão inicialmente
+        // Desativa o botão até os campos terem valores válidos
         buttonLogin.setEnabled(false);
 
-        // 2. Monitoramento de Digitação
-        TextWatcher textWatcher = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) { checkFields(); }
-            @Override
-            public void afterTextChanged(Editable s) {}
+        // Validação de campos
+        TextWatcher watcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { checkFields(); }
+            @Override public void afterTextChanged(Editable s) {}
         };
 
-        editEmail.addTextChangedListener(textWatcher);
-        editPassword.addTextChangedListener(textWatcher);
+        editEmail.addTextChangedListener(watcher);
+        editPassword.addTextChangedListener(watcher);
     }
 
-    private boolean checkFields() {
+    private void checkFields() {
         String email = editEmail.getText().toString().trim();
-        String password = editPassword.getText().toString().trim();
+        String pass = editPassword.getText().toString().trim();
 
-        boolean isEmailFormatValid = Patterns.EMAIL_ADDRESS.matcher(email).matches();
-        boolean isFilled = !email.isEmpty() && !password.isEmpty();
+        boolean validEmail = Patterns.EMAIL_ADDRESS.matcher(email).matches();
+        boolean filled = !email.isEmpty() && !pass.isEmpty();
 
-        buttonLogin.setEnabled(isFilled && isEmailFormatValid);
+        buttonLogin.setEnabled(validEmail && filled);
 
-        if (!email.isEmpty() && !isEmailFormatValid) {
+        if (!email.isEmpty() && !validEmail) {
             editEmail.setError("E-mail inválido");
         } else {
             editEmail.setError(null);
         }
-
-        return isFilled;
     }
 
-    // --- AQUI COMEÇA A INTEGRAÇÃO REAL ---
+    // LOGIN
     public void goToHome(View view) {
         String email = editEmail.getText().toString().trim();
         String password = editPassword.getText().toString().trim();
 
-        // Feedback visual (Bloqueia botão e muda texto)
+        // Feedback visual
         buttonLogin.setEnabled(false);
         buttonLogin.setText("Entrando...");
 
-        // 1. Configura Retrofit
+        // Retrofit
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         AuthService service = retrofit.create(AuthService.class);
-
-        // 2. Prepara os dados (LoginRequest que criamos antes)
         LoginRequest loginData = new LoginRequest(email, password);
 
-        // 3. Faz a chamada ao servidor
         service.fazerLogin(loginData).enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                // Restaura o botão
                 buttonLogin.setEnabled(true);
                 buttonLogin.setText("Logar");
 
                 if (response.isSuccessful() && response.body() != null) {
-                    // SUCESSO! O servidor aceitou o login
+
                     String token = response.body().getAccessToken();
-                    String nome = response.body().getUser().getNome(); // Pega nome do usuário
+                    String nome = response.body().getUser().getNome();
+                    String emailUser = response.body().getUser().getEmail();
 
                     Toast.makeText(MainActivity.this, "Bem-vindo, " + nome + "!", Toast.LENGTH_SHORT).show();
 
-                    // Salva o token (Importante para o futuro)
-                    getSharedPreferences("UPATH_PREFS", MODE_PRIVATE)
-                            .edit()
-                            .putString("ACCESS_TOKEN", token)
-                            .apply();
+                    // 🔥 SALVA DADOS DO USUÁRIO (A PARTE MAIS IMPORTANTE!)
+                    SharedPreferences prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
 
-                    // Vai para a Home
+                    editor.putString("ACCESS_TOKEN", token);
+                    editor.putString("USER_NAME", nome);
+                    editor.putString("USER_EMAIL", emailUser);
+
+                    // FUTURAMENTE SE TIVER FOTO:
+                    // editor.putString("USER_PHOTO", response.body().getUser().getFoto());
+
+                    editor.apply();
+
+                    // Abre a HomeUser
                     Intent intent = new Intent(MainActivity.this, HomeUser.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();
 
                 } else {
-                    // ERRO (Senha errada ou usuário não existe)
                     Toast.makeText(MainActivity.this, "E-mail ou senha incorretos.", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
-                // ERRO DE CONEXÃO (Servidor desligado ou IP errado)
                 buttonLogin.setEnabled(true);
                 buttonLogin.setText("Logar");
 
-                Toast.makeText(MainActivity.this, "Falha na conexão. O servidor está rodando?", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Erro de conexão com o servidor!", Toast.LENGTH_LONG).show();
                 Log.e("LOGIN_ERROR", "Erro: " + t.getMessage());
             }
         });
     }
 
-    public void goToRegister (View view) {
+    public void goToRegister(View view) {
         startActivity(new Intent(this, Register.class));
     }
 
-    public void goToRetriever (View view) {
+    public void goToRetriever(View view) {
         startActivity(new Intent(this, Retrieve.class));
     }
 }

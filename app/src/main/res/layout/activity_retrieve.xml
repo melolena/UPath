@@ -18,7 +18,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/logo" />
 
-    <!-- GUIDELINES ADICIONADAS PARA ALINHAMENTO -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_start"
         android:layout_width="wrap_content"
@@ -63,7 +62,21 @@
         app:layout_constraintTop_toBottomOf="@+id/logoLogin" />
 
     <TextView
-        android:id="@+id/textRetrieve"
+        android:id="@+id/textSucesso"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/poppins"
+        android:text="Uma mensagem foi enviada no seu e-mail! Siga os passos para recuperação da sua conta."
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_end"
+        app:layout_constraintStart_toStartOf="@+id/guideline_start"
+        app:layout_constraintTop_toBottomOf="@+id/titleRetrieve" />
+
+    <TextView
+        android:id="@+id/textInstrucao"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -76,7 +89,7 @@
         app:layout_constraintTop_toBottomOf="@+id/titleRetrieve" />
 
     <TextView
-        android:id="@+id/textEmail"
+        android:id="@+id/textLabelEmail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -85,7 +98,7 @@
         android:textColor="@color/white"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="@+id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/textRetrieve" />
+        app:layout_constraintTop_toBottomOf="@id/textInstrucao" />
 
     <EditText
         android:id="@+id/email"
@@ -104,7 +117,7 @@
         android:textSize="15sp"
         app:layout_constraintEnd_toStartOf="@+id/guideline_end"
         app:layout_constraintStart_toStartOf="@+id/guideline_start"
-        app:layout_constraintTop_toBottomOf="@id/textEmail" />
+        app:layout_constraintTop_toBottomOf="@id/textLabelEmail" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonEnviarEmail"
@@ -128,6 +141,5 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/guideline_start"
         app:layout_constraintTop_toBottomOf="@id/email" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

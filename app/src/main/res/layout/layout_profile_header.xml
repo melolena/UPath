@@ -12,26 +12,28 @@
     android:paddingEnd="16dp"
     android:paddingBottom="16dp">
 
-    <!-- Card com imagem de perfil -->
+    <!-- Card com imagem de perfil (CLICÁVEL) -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardProfile"
         android:layout_width="56dp"
         android:layout_height="56dp"
         app:cardCornerRadius="28dp"
         app:cardElevation="4dp"
         app:cardPreventCornerOverlap="false"
         app:strokeColor="#F3F4F6"
-        app:strokeWidth="3dp">
+        app:strokeWidth="3dp"
+        android:clickable="true"
+        android:focusable="true">
 
         <ImageView
             android:id="@+id/profileImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@drawable/user_placeholder" />
-    </androidx.cardview.widget.CardView>
+            android:src="@drawable/user_default_foreground" />
+        </androidx.cardview.widget.CardView>
 
-    <!-- Textos do perfil -->
-    <LinearLayout
+        <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
@@ -42,7 +44,7 @@
             android:id="@+id/greetingText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Olá, Maurício Gabriel Jr!"
+            android:text="Olá, Estudante!"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:fontFamily="@font/poppins_semibold" />
@@ -56,35 +58,5 @@
             android:textSize="14sp"
             android:fontFamily="@font/poppins" />
     </LinearLayout>
-
-    <!-- Ícone de notificação com badge -->
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/notificationIcon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="Notificações"
-            android:src="@drawable/notification_foreground"
-            app:tint="@android:color/white" />
-
-        <TextView
-            android:id="@+id/notificationBadge"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_alignTop="@id/notificationIcon"
-            android:layout_alignEnd="@id/notificationIcon"
-            android:layout_marginTop="19dp"
-            android:layout_marginEnd="3dp"
-            android:background="@drawable/badge_background"
-            android:elevation="2dp"
-            android:fontFamily="@font/poppins"
-            android:gravity="center"
-            android:text="3"
-            android:textColor="@android:color/white"
-            android:textSize="10sp" />
-    </RelativeLayout>
 
 </LinearLayout>

@@ -14,6 +14,9 @@
         android:theme="@style/Theme.UPath"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".NewPassword"
+            android:exported="false" />
+        <activity
             android:name=".ActivitySimulation"
             android:exported="false"
             android:launchMode="singleTop" />

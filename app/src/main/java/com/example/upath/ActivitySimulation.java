@@ -1,6 +1,5 @@
 package com.example.upath;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -23,11 +22,19 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.HashMap;
 import java.util.Map;
 
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+
+
+// IMPORTANTE → você precisa deste import
+import android.os.Build;
+import com.example.upath.ProfileHeader;
+
 
 public class ActivitySimulation extends AppCompatActivity {
 
@@ -45,10 +52,8 @@ public class ActivitySimulation extends AppCompatActivity {
 
     // --- REDE ---
     private ChatService chatService;
-    // IMPORTANTE: Se usar emulador use 10.0.2.2. Se usar celular físico, use o IP do PC (ex: 192.168.1.X)
-    private static final String BASE_URL = "http://10.0.2.2:4000/";
 
-    // --- MAPEAMENTO (O Segredo para a Ortografia Correta) ---
+    // --- MAPA DO LABEL ENCODER ---
     private Map<String, String> mapaCursos;
 
     @Override
@@ -58,6 +63,9 @@ public class ActivitySimulation extends AppCompatActivity {
         setContentView(R.layout.activity_simulation);
 
         ajustarPadding();
+
+        // ✅ CHAMAR O HEADER AQUI
+        ProfileHeader.setup(this);
 
         // Inicializa Views
         cardInput = findViewById(R.id.card_input_simulacao);
@@ -71,22 +79,18 @@ public class ActivitySimulation extends AppCompatActivity {
         textMsgDetalhe = findViewById(R.id.text_msg_detalhe);
         btnNovaSimulacao = findViewById(R.id.btn_nova_simulacao);
 
-        // Inicializa Mapeamento
         inicializarMapaCursos();
-
-        // Configurações
         configurarRetrofit();
         configurarSpinner();
         configurarBottomNav();
 
-        // Ações
         btnSimular.setOnClickListener(v -> realizarSimulacao());
         btnNovaSimulacao.setOnClickListener(v -> resetarTela());
     }
 
+    // ⬇ MAPEAMENTO DO LABEL ENCODER (NOMES EXATOS)
     private void inicializarMapaCursos() {
         mapaCursos = new HashMap<>();
-        // CHAVE (O que aparece na tela) -> VALOR (O que a IA conhece)
         mapaCursos.put("Administração", "ADMINISTRACAO");
         mapaCursos.put("Ciência da Computação", "CIENCIA DA COMPUTACAO");
         mapaCursos.put("Direito", "DIREITO");
@@ -97,20 +101,45 @@ public class ActivitySimulation extends AppCompatActivity {
         mapaCursos.put("Sistemas de Informação", "SISTEMAS DE INFORMACAO");
     }
 
-    private void configurarRetrofit() {
-        try {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-            chatService = retrofit.create(ChatService.class);
-        } catch (Exception e) {
-            Toast.makeText(this, "Erro Config: " + e.getMessage(), Toast.LENGTH_LONG).show();
+    // Detecta se está no emulador ou celular físico
+    private String getBaseUrl() {
+        boolean isEmulator =
+                Build.FINGERPRINT.startsWith("generic")
+                        || Build.FINGERPRINT.startsWith("unknown")
+                        || Build.MODEL.contains("google_sdk")
+                        || Build.MODEL.contains("Emulator")
+                        || Build.MODEL.contains("Android SDK built for x86")
+                        || Build.MANUFACTURER.contains("Genymotion")
+                        || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                        || "google_sdk".equals(Build.PRODUCT)
+                        || Build.HARDWARE.contains("ranchu")
+                        || Build.HARDWARE.contains("goldfish");
+
+        if (isEmulator) {
+            return "http://10.0.2.2:4000/";
+        } else {
+            return "http://192.168.0.12:4000/";
         }
     }
 
+    private void configurarRetrofit() {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(logging)
+                .build();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(getBaseUrl())
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        chatService = retrofit.create(ChatService.class);
+    }
+
     private void configurarSpinner() {
-        // A lista visual agora tem acentos e ortografia correta
         String[] cursosVisuais = {
                 "Selecione...",
                 "Administração",
@@ -125,7 +154,7 @@ public class ActivitySimulation extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
-                R.layout.item_spinner_branco, // Seu XML com texto branco
+                R.layout.item_spinner_branco,
                 cursosVisuais
         );
 
@@ -149,29 +178,33 @@ public class ActivitySimulation extends AppCompatActivity {
         try {
             double nota = Double.parseDouble(notaStr);
 
-            // 1. Pega o nome BONITO da tela (ex: "Ciência da Computação")
             String nomeVisual = spinnerCursos.getSelectedItem().toString();
-
-            // 2. Converte para o nome TÉCNICO da IA (ex: "CIENCIA DA COMPUTACAO")
             String nomeTecnico = mapaCursos.get(nomeVisual);
 
             if (nomeTecnico == null) {
-                Toast.makeText(this, "Erro interno: Curso não mapeado", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Erro interno: curso não mapeado", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             btnSimular.setText("Calculando...");
             btnSimular.setEnabled(false);
 
-            // Envia o NOME TÉCNICO para o servidor
             SimulationRequest request = new SimulationRequest(nomeTecnico, nota);
 
             chatService.realizarSimulacao(request).enqueue(new Callback<SimulationResponse>() {
                 @Override
                 public void onResponse(Call<SimulationResponse> call, Response<SimulationResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        // Passamos o 'nomeVisual' para exibir na tela de resultado (fica mais bonito)
-                        mostrarResultado(nomeVisual, response.body());
+                        SimulationResponse body = response.body();
+
+                        if (body.erro != null && !body.erro.isEmpty()) {
+                            Toast.makeText(ActivitySimulation.this, body.erro, Toast.LENGTH_LONG).show();
+                            restaurarBotoes();
+                            return;
+                        }
+
+                        mostrarResultado(nomeVisual, body);
+
                     } else {
                         Toast.makeText(ActivitySimulation.this, "Erro servidor: " + response.code(), Toast.LENGTH_SHORT).show();
                         restaurarBotoes();
@@ -191,14 +224,14 @@ public class ActivitySimulation extends AppCompatActivity {
     }
 
     private void mostrarResultado(String cursoVisual, SimulationResponse respostaIA) {
-        textCursoEscolhido.setText(cursoVisual); // Exibe com acento
-        textResultadoFinal.setText(respostaIA.getResultado());
-        textMsgDetalhe.setText(respostaIA.getMensagem());
+        textCursoEscolhido.setText(cursoVisual);
+        textResultadoFinal.setText(respostaIA.resultado);
+        textMsgDetalhe.setText(respostaIA.mensagem);
 
-        if (respostaIA.isAprovado()) {
-            textResultadoFinal.setTextColor(0xFF10B981); // Verde
+        if (respostaIA.aprovado) {
+            textResultadoFinal.setTextColor(0xFF10B981);
         } else {
-            textResultadoFinal.setTextColor(0xFFEF4444); // Vermelho
+            textResultadoFinal.setTextColor(0xFFEF4444);
         }
 
         cardInput.setVisibility(View.GONE);

@@ -79,7 +79,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="0dp"
         android:background="@drawable/email_underline_selector"
-        android:drawableStart="@drawable/user"
+        android:drawableStart="@drawable/user_default_foreground"
         android:drawablePadding="8dp"
         android:fontFamily="@font/poppins"
         android:hint="Digite seu nome..."

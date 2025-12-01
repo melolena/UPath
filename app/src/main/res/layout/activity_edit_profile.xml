@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@drawable/user_placeholder" />
+            android:src="@drawable/user_default_foreground" />
 
     </androidx.cardview.widget.CardView>
 
@@ -76,7 +76,7 @@
         android:layout_marginEnd="32dp"
         app:hintEnabled="false"
         app:boxBackgroundMode="none"
-        app:startIconDrawable="@drawable/user"
+        app:startIconDrawable="@drawable/user_default_foreground"
         app:startIconTint="@color/white"
         android:background="@drawable/email_underline_selector"
         android:paddingBottom="12dp"
