@@ -1,16 +1,37 @@
 package com.example.upath;
 
-import com.google.gson.annotations.SerializedName;
-
 public class LoginResponse {
-    @SerializedName("access_token")
-    private String accessToken;
 
-    @SerializedName("token_type")
-    private String tokenType;
+    public String access_token;
+    public String token_type;
+    public User user;
 
-    private User user; // O objeto usuário que vem junto
+    // ---- GETTERS ----
+    public String getAccessToken() {
+        return access_token;
+    }
 
-    public String getAccessToken() { return accessToken; }
-    public User getUser() { return user; }
+    public String getTokenType() {
+        return token_type;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    // ================= USER =================
+    public static class User {
+        public String id;
+        public String nome;
+        public String email;
+        public String role;
+        public String foto_url;
+
+        // GETTERS
+        public String getId() { return id; }
+        public String getNome() { return nome; }
+        public String getEmail() { return email; }
+        public String getRole() { return role; }
+        public String getFotoUrl() { return foto_url; }
+    }
 }

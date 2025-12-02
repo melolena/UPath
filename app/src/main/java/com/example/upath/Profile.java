@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +14,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class Profile extends AppCompatActivity {
@@ -24,9 +27,17 @@ public class Profile extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         setupInsets();
-        setupHeaderDetail();
+        setupHeaderDetail(); // Carrega na criação
         setupProfileOptions();
         configurarBottomNav();
+    }
+
+    // --- CORREÇÃO IMPORTANTE ---
+    // Isso faz os dados atualizarem quando você volta da tela de Editar
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupHeaderDetail();
     }
 
     private void setupInsets() {
@@ -41,7 +52,6 @@ public class Profile extends AppCompatActivity {
     }
 
     private void setupHeaderDetail() {
-
         View header = findViewById(R.id.profile_detail_header);
         if (header == null) return;
 
@@ -52,39 +62,59 @@ public class Profile extends AppCompatActivity {
         ImageView edit = header.findViewById(R.id.icon_edit);
         ImageView back = header.findViewById(R.id.icon_navigate_profile);
 
+        // Recupera os dados mais recentes
         var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
 
-        String nome = prefs.getString("USER_NAME", "Usuário");
-        String foto = prefs.getString("USER_PHOTO", null);
-        String emailUser = prefs.getString("USER_EMAIL", "email@email.com");
+        String nomeSalvo = prefs.getString("USER_NAME", "Usuário");
+        String emailSalvo = prefs.getString("USER_EMAIL", "email@email.com");
+        String fotoSalva = prefs.getString("USER_PHOTO", null);
 
-        name.setText(nome);
-        email.setText(emailUser);
+        name.setText(nomeSalvo);
+        email.setText(emailSalvo);
 
-        if (foto != null) {
-            Glide.with(this).load(foto).into(profileImg);
+        // Carrega a foto (com proteção de cache para atualizar sempre)
+        if (fotoSalva != null) {
+            Glide.with(this)
+                    .load(fotoSalva)
+                    .transform(new CircleCrop())
+                    .placeholder(R.drawable.user_default_foreground)
+                    .error(R.drawable.user_default_foreground)
+                    // O signature força o Glide a recarregar a imagem se ela mudou
+                    .signature(new ObjectKey(System.currentTimeMillis()))
+                    .into(profileImg);
+        } else {
+            profileImg.setImageResource(R.drawable.user_default_foreground);
         }
 
+        // Botão Editar (Lápis)
         edit.setOnClickListener(v ->
                 startActivity(new Intent(this, EditProfile.class))
         );
 
+        // Botão Voltar (Seta)
         back.setOnClickListener(v -> finish());
     }
 
     private void setupProfileOptions() {
-        setupOption(R.id.option_resultados, R.drawable.ic_clipboard_check_foreground, R.string.resultado);
-        setupOption(R.id.option_historico, R.drawable.ic_clock_foreground, R.string.historico);
-        setupOption(R.id.option_salvos, R.drawable.save_foreground, R.string.salvos);
-        setupOption(R.id.option_planos, R.drawable.star_foreground, R.string.planos);
-        setupOption(R.id.option_sobre_nos, R.drawable.info_circle_foreground, R.string.sobre_nos);
+        // Apenas "Sobre Nós"
+        setupOption(R.id.option_sobre_nos, R.drawable.info_circle_foreground, "Sobre Nós");
+
+        View sobreNos = findViewById(R.id.option_sobre_nos);
+        if (sobreNos != null) {
+            sobreNos.setOnClickListener(v -> {
+                Toast.makeText(this, "UPATH - Versão 1.0", Toast.LENGTH_SHORT).show();
+            });
+        }
     }
 
-    private void setupOption(int id, int icon, int textId) {
+    private void setupOption(int id, int icon, String text) {
         View v = findViewById(id);
         if (v != null) {
-            ((ImageView) v.findViewById(R.id.option_icon)).setImageResource(icon);
-            ((TextView) v.findViewById(R.id.option_title)).setText(textId);
+            ImageView iconView = v.findViewById(R.id.option_icon);
+            TextView titleView = v.findViewById(R.id.option_title);
+
+            if (iconView != null) iconView.setImageResource(icon);
+            if (titleView != null) titleView.setText(text);
         }
     }
 
@@ -93,8 +123,7 @@ public class Profile extends AppCompatActivity {
             View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
             if (bottomNavInclude != null) {
                 BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
-
-                // Nenhum item deve ficar ativo
+                // Nenhum item ativo (-1) pois estamos numa tela "extra"
                 BottomNavHelper.setupNavigation(this, nav, -1);
             }
         } catch (Exception e) {

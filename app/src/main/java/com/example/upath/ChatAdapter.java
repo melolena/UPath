@@ -1,18 +1,20 @@
-package com.example.upath; // Certifique-se que este pacote é o mesmo do seu ActivityTeste
+package com.example.upath;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
-    private List<Message> messageList;
+    private final List<Message> messageList;
 
     public ChatAdapter(List<Message> messageList) {
         this.messageList = messageList;
@@ -20,36 +22,31 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemViewType(int position) {
-        Message message = messageList.get(position);
-        if (message.isSentByUser()) {
-            return VIEW_TYPE_SENT;
-        } else {
-            return VIEW_TYPE_RECEIVED;
-        }
+        Message msg = messageList.get(position);
+        return msg.isSentByUser() ? VIEW_TYPE_SENT : VIEW_TYPE_RECEIVED;
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == VIEW_TYPE_SENT) {
-            View view = LayoutInflater.from(parent.getContext())
+            View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_sent, parent, false);
-            return new SentMessageHolder(view);
+            return new SentMessageHolder(v);
         } else {
-            View view = LayoutInflater.from(parent.getContext())
+            View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_received, parent, false);
-            return new ReceivedMessageHolder(view);
+            return new ReceivedMessageHolder(v);
         }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message message = messageList.get(position);
-        if (holder.getItemViewType() == VIEW_TYPE_SENT) {
+        if (holder instanceof SentMessageHolder)
             ((SentMessageHolder) holder).bind(message);
-        } else {
+        else
             ((ReceivedMessageHolder) holder).bind(message);
-        }
     }
 
     @Override
@@ -57,24 +54,29 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messageList.size();
     }
 
-    // --- Classes Internas (ViewHolders) ---
     static class SentMessageHolder extends RecyclerView.ViewHolder {
         TextView messageText;
+
         SentMessageHolder(View itemView) {
             super(itemView);
-            // Certifique-se de que o ID no XML item_message_sent é @+id/text_message_body
             messageText = itemView.findViewById(R.id.text_message_body);
         }
-        void bind(Message message) { messageText.setText(message.getText()); }
+
+        void bind(Message message) {
+            messageText.setText(message.getText());
+        }
     }
 
     static class ReceivedMessageHolder extends RecyclerView.ViewHolder {
         TextView messageText;
+
         ReceivedMessageHolder(View itemView) {
             super(itemView);
-            // Certifique-se de que o ID no XML item_message_received é @+id/text_message_body
             messageText = itemView.findViewById(R.id.text_message_body);
         }
-        void bind(Message message) { messageText.setText(message.getText()); }
+
+        void bind(Message message) {
+            messageText.setText(message.getText());
+        }
     }
 }

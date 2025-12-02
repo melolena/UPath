@@ -1,5 +1,6 @@
 package com.example.upath;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -30,12 +31,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-
-// IMPORTANTE → você precisa deste import
-import android.os.Build;
-import com.example.upath.ProfileHeader;
-
-
 public class ActivitySimulation extends AppCompatActivity {
 
     // --- VIEWS ---
@@ -63,9 +58,7 @@ public class ActivitySimulation extends AppCompatActivity {
         setContentView(R.layout.activity_simulation);
 
         ajustarPadding();
-
-        // ✅ CHAMAR O HEADER AQUI
-        ProfileHeader.setup(this);
+        ProfileHeader.setup(this); // Configura o header na criação
 
         // Inicializa Views
         cardInput = findViewById(R.id.card_input_simulacao);
@@ -88,7 +81,12 @@ public class ActivitySimulation extends AppCompatActivity {
         btnNovaSimulacao.setOnClickListener(v -> resetarTela());
     }
 
-    // ⬇ MAPEAMENTO DO LABEL ENCODER (NOMES EXATOS)
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ProfileHeader.setup(this); // Atualiza header ao voltar
+    }
+
     private void inicializarMapaCursos() {
         mapaCursos = new HashMap<>();
         mapaCursos.put("Administração", "ADMINISTRACAO");
@@ -101,25 +99,11 @@ public class ActivitySimulation extends AppCompatActivity {
         mapaCursos.put("Sistemas de Informação", "SISTEMAS DE INFORMACAO");
     }
 
-    // Detecta se está no emulador ou celular físico
+    // Ajuste a porta se necessário (4000 ou 8001 dependendo do seu backend Python/Node)
     private String getBaseUrl() {
-        boolean isEmulator =
-                Build.FINGERPRINT.startsWith("generic")
-                        || Build.FINGERPRINT.startsWith("unknown")
-                        || Build.MODEL.contains("google_sdk")
-                        || Build.MODEL.contains("Emulator")
-                        || Build.MODEL.contains("Android SDK built for x86")
-                        || Build.MANUFACTURER.contains("Genymotion")
-                        || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
-                        || "google_sdk".equals(Build.PRODUCT)
-                        || Build.HARDWARE.contains("ranchu")
-                        || Build.HARDWARE.contains("goldfish");
-
-        if (isEmulator) {
-            return "http://10.0.2.2:4000/";
-        } else {
-            return "http://192.168.0.12:4000/";
-        }
+        // Se estiver usando Emulador:
+        return "http://10.0.2.2:4000/";
+        // Se usar celular físico via USB, troque pelo IP: "http://192.168.0.X:4000/"
     }
 
     private void configurarRetrofit() {
@@ -177,7 +161,6 @@ public class ActivitySimulation extends AppCompatActivity {
 
         try {
             double nota = Double.parseDouble(notaStr);
-
             String nomeVisual = spinnerCursos.getSelectedItem().toString();
             String nomeTecnico = mapaCursos.get(nomeVisual);
 
@@ -196,15 +179,12 @@ public class ActivitySimulation extends AppCompatActivity {
                 public void onResponse(Call<SimulationResponse> call, Response<SimulationResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         SimulationResponse body = response.body();
-
                         if (body.erro != null && !body.erro.isEmpty()) {
                             Toast.makeText(ActivitySimulation.this, body.erro, Toast.LENGTH_LONG).show();
                             restaurarBotoes();
                             return;
                         }
-
                         mostrarResultado(nomeVisual, body);
-
                     } else {
                         Toast.makeText(ActivitySimulation.this, "Erro servidor: " + response.code(), Toast.LENGTH_SHORT).show();
                         restaurarBotoes();
@@ -229,9 +209,9 @@ public class ActivitySimulation extends AppCompatActivity {
         textMsgDetalhe.setText(respostaIA.mensagem);
 
         if (respostaIA.aprovado) {
-            textResultadoFinal.setTextColor(0xFF10B981);
+            textResultadoFinal.setTextColor(0xFF10B981); // Verde
         } else {
-            textResultadoFinal.setTextColor(0xFFEF4444);
+            textResultadoFinal.setTextColor(0xFFEF4444); // Vermelho
         }
 
         cardInput.setVisibility(View.GONE);

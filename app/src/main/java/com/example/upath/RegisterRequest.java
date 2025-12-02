@@ -1,11 +1,11 @@
 package com.example.upath;
 
 public class RegisterRequest {
-    private String nome;
-    private String email;
-    private String confirmEmail; // <--- Faltava isso
-    private String senha;
-    private String confirmSenha; // <--- Faltava isso
+    public String nome;
+    public String email;
+    public String confirmEmail;
+    public String senha;
+    public String confirmSenha;
 
     public RegisterRequest(String nome, String email, String confirmEmail, String senha, String confirmSenha) {
         this.nome = nome;

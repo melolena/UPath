@@ -5,17 +5,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.button.MaterialButton; // Importante para o botão novo
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -27,9 +25,9 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText editEmail;
     private TextInputEditText editPassword;
-    private Button buttonLogin;
+    private MaterialButton buttonLogin; // Mudado para MaterialButton se estiver usando o layout novo
 
-    // URL DO BACKEND
+    // CORREÇÃO: Apenas a raiz, pois o AuthService já tem "api/v1/auth/login"
     private static final String BASE_URL = "http://10.0.2.2:8001/";
 
     @Override
@@ -37,19 +35,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Mapeamento das Views
+        // Verifique se os IDs batem com seu XML
         editEmail = findViewById(R.id.edit_email);
-        TextInputLayout inputPasswordLayout = findViewById(R.id.input_password_layout);
         editPassword = findViewById(R.id.edit_password);
         buttonLogin = findViewById(R.id.botao_logar);
 
-        // Desativa o botão até os campos terem valores válidos
         buttonLogin.setEnabled(false);
 
-        // Validação de campos
         TextWatcher watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { checkFields(); }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                checkFields();
+            }
             @Override public void afterTextChanged(Editable s) {}
         };
 
@@ -66,32 +63,30 @@ public class MainActivity extends AppCompatActivity {
 
         buttonLogin.setEnabled(validEmail && filled);
 
-        if (!email.isEmpty() && !validEmail) {
-            editEmail.setError("E-mail inválido");
-        } else {
+        // Remove erro visual se estiver corrigindo
+        if (validEmail) {
             editEmail.setError(null);
         }
     }
 
-    // LOGIN
+    // Vinculado ao XML (android:onClick="goToHome") ou pode usar setOnClickListener no onCreate
     public void goToHome(View view) {
         String email = editEmail.getText().toString().trim();
-        String password = editPassword.getText().toString().trim();
+        String senha = editPassword.getText().toString().trim();
 
-        // Feedback visual
         buttonLogin.setEnabled(false);
         buttonLogin.setText("Entrando...");
 
-        // Retrofit
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        AuthService service = retrofit.create(AuthService.class);
-        LoginRequest loginData = new LoginRequest(email, password);
+        AuthService api = retrofit.create(AuthService.class);
 
-        service.fazerLogin(loginData).enqueue(new Callback<LoginResponse>() {
+        LoginRequest req = new LoginRequest(email, senha);
+
+        api.fazerLogin(req).enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 buttonLogin.setEnabled(true);
@@ -99,33 +94,40 @@ public class MainActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
 
-                    String token = response.body().getAccessToken();
-                    String nome = response.body().getUser().getNome();
-                    String emailUser = response.body().getUser().getEmail();
+                    LoginResponse res = response.body();
 
-                    Toast.makeText(MainActivity.this, "Bem-vindo, " + nome + "!", Toast.LENGTH_SHORT).show();
-
-                    // 🔥 SALVA DADOS DO USUÁRIO (A PARTE MAIS IMPORTANTE!)
+                    // Salva o token para usar depois
                     SharedPreferences prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
                     SharedPreferences.Editor editor = prefs.edit();
 
-                    editor.putString("ACCESS_TOKEN", token);
-                    editor.putString("USER_NAME", nome);
-                    editor.putString("USER_EMAIL", emailUser);
+                    if (res.getAccessToken() != null) {
+                        editor.putString("ACCESS_TOKEN", res.getAccessToken());
+                    }
 
-                    // FUTURAMENTE SE TIVER FOTO:
-                    // editor.putString("USER_PHOTO", response.body().getUser().getFoto());
-
+                    if (res.getUser() != null) {
+                        editor.putString("USER_NAME", res.getUser().getNome());
+                        editor.putString("USER_EMAIL", res.getUser().getEmail());
+                        if (res.getUser().getFotoUrl() != null) {
+                            editor.putString("USER_PHOTO", res.getUser().getFotoUrl());
+                        }
+                    }
                     editor.apply();
 
-                    // Abre a HomeUser
+                    Toast.makeText(MainActivity.this, "Bem-vindo!", Toast.LENGTH_SHORT).show();
+
                     Intent intent = new Intent(MainActivity.this, HomeUser.class);
+                    // Limpa a pilha para não voltar ao login ao apertar 'voltar'
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();
 
                 } else {
-                    Toast.makeText(MainActivity.this, "E-mail ou senha incorretos.", Toast.LENGTH_SHORT).show();
+                    // Erro 401 (Senha errada) ou 404 (URL errada - mas agora corrigimos a URL)
+                    if (response.code() == 401) {
+                        Toast.makeText(MainActivity.this, "Senha ou E-mail incorretos.", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Erro: " + response.code(), Toast.LENGTH_LONG).show();
+                    }
                 }
             }
 
@@ -133,9 +135,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 buttonLogin.setEnabled(true);
                 buttonLogin.setText("Logar");
-
-                Toast.makeText(MainActivity.this, "Erro de conexão com o servidor!", Toast.LENGTH_LONG).show();
-                Log.e("LOGIN_ERROR", "Erro: " + t.getMessage());
+                Toast.makeText(MainActivity.this, "Falha na conexão: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

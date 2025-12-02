@@ -1,23 +1,14 @@
 package com.example.upath;
 
-
-import com.example.upath.ApiClient;
-import com.example.upath.FileUtils;
-
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar; // Importante para a Toolbar
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
@@ -41,11 +32,13 @@ public class EditProfile extends AppCompatActivity {
     private Uri selectedImage = null;
     private UserService userService;
 
+    // Lançador para abrir a galeria
     ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(),
                     uri -> {
                         if (uri != null) {
                             selectedImage = uri;
+                            // Mostra a imagem na tela imediatamente usando Glide
                             Glide.with(this).load(uri).into(profileImg);
                         }
                     });
@@ -55,82 +48,117 @@ public class EditProfile extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
+        // 1. Configurar a Toolbar (Seta de voltar)
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.setNavigationOnClickListener(v -> finish());
+        }
+
+        // 2. Vincular Views
         profileImg = findViewById(R.id.profile_image);
         inputName = findViewById(R.id.input_name);
         inputPassword = findViewById(R.id.input_password);
         buttonConfirm = findViewById(R.id.button_confirm);
         buttonCancel = findViewById(R.id.button_cancel);
 
-        // Carregar dados salvos
+        // 3. Carregar dados atuais do SharedPreferences
         var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
-        inputName.setText(prefs.getString("USER_NAME", ""));
+        String currentName = prefs.getString("USER_NAME", "");
+        inputName.setText(currentName);
+
         String foto = prefs.getString("USER_PHOTO", null);
-        if (foto != null) Glide.with(this).load(foto).into(profileImg);
+        if (foto != null) {
+            Glide.with(this).load(foto).into(profileImg);
+        }
 
+        // 4. Configurar Cliques
         findViewById(R.id.btn_change_photo).setOnClickListener(v -> pickImage.launch("image/*"));
+
         buttonCancel.setOnClickListener(v -> finish());
-
-        userService = ApiClient.getClient().create(UserService.class);
-
         buttonConfirm.setOnClickListener(v -> salvarAlteracoes());
+
+        // 5. Iniciar API
+        userService = ApiClient.getClient().create(UserService.class);
     }
 
-
     private void salvarAlteracoes() {
-
-        String nome = inputName.getText().toString().trim();
-        String senha = inputPassword.getText().toString().trim();
+        // Pega o texto de forma segura
+        String nome = (inputName.getText() != null) ? inputName.getText().toString().trim() : "";
+        String senha = (inputPassword.getText() != null) ? inputPassword.getText().toString().trim() : "";
 
         if (nome.isEmpty()) {
-            Toast.makeText(this, "Digite seu nome.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "O nome não pode ser vazio.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        RequestBody nomeReq =
-                RequestBody.create(MediaType.parse("text/plain"), nome);
+        // Trava o botão para não clicar duas vezes
+        buttonConfirm.setEnabled(false);
+        buttonConfirm.setText("Salvando...");
+
+        // Preparar dados para Multipart (Backend espera esses campos)
+        RequestBody nomeReq = RequestBody.create(MediaType.parse("text/plain"), nome);
+
+        // Se senha for vazia, envia string vazia (o backend deve tratar para não mudar a senha)
+        RequestBody senhaReq = RequestBody.create(MediaType.parse("text/plain"), senha);
 
         MultipartBody.Part fotoPart = null;
 
+        // Se o usuário escolheu uma foto nova
         if (selectedImage != null) {
-            File file = FileUtils.getFile(this, selectedImage);
+            try {
+                // Usa o FileUtils para converter Uri -> File
+                File file = FileUtils.getFile(this, selectedImage);
 
-            RequestBody reqFile = RequestBody.create(
-                    MediaType.parse(getContentResolver().getType(selectedImage)),
-                    file
-            );
+                RequestBody reqFile = RequestBody.create(
+                        MediaType.parse("image/*"),
+                        file
+                );
 
-            fotoPart = MultipartBody.Part.createFormData("foto", file.getName(), reqFile);
+                fotoPart = MultipartBody.Part.createFormData("foto", file.getName(), reqFile);
+            } catch (Exception e) {
+                Toast.makeText(this, "Erro ao processar imagem", Toast.LENGTH_SHORT).show();
+                buttonConfirm.setEnabled(true);
+                buttonConfirm.setText("Salvar");
+                return;
+            }
         }
 
-        RequestBody senhaReq =
-                senha.isEmpty()
-                        ? null
-                        : RequestBody.create(MediaType.parse("text/plain"), senha);
+        // Recuperar Token
+        var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
+        String token = "Bearer " + prefs.getString("ACCESS_TOKEN", "");
 
-        userService.updateProfile(nomeReq, senhaReq, fotoPart)
+        // Chamada API
+        userService.updateProfile(token, nomeReq, senhaReq, fotoPart)
                 .enqueue(new Callback<UpdateProfileResponse>() {
                     @Override
                     public void onResponse(Call<UpdateProfileResponse> call, Response<UpdateProfileResponse> response) {
+                        buttonConfirm.setEnabled(true);
+                        buttonConfirm.setText("Salvar");
 
                         if (response.isSuccessful() && response.body() != null) {
                             var data = response.body().data;
 
-                            var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE).edit();
-                            prefs.putString("USER_NAME", data.nome);
-                            prefs.putString("USER_EMAIL", data.email);
-                            prefs.putString("USER_PHOTO", data.fotoUrl);
-                            prefs.apply();
+                            // Atualizar SharedPreferences com os novos dados recebidos do servidor
+                            var editor = prefs.edit();
+                            if (data.nome != null) editor.putString("USER_NAME", data.nome);
+                            if (data.email != null) editor.putString("USER_EMAIL", data.email);
+                            if (data.fotoUrl != null) editor.putString("USER_PHOTO", data.fotoUrl);
+                            editor.apply();
 
-                            Toast.makeText(EditProfile.this, "Perfil atualizado!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(EditProfile.this, "Perfil atualizado com sucesso!", Toast.LENGTH_LONG).show();
+
+                            // Fecha a tela e volta para o perfil atualizado
                             finish();
                         } else {
-                            Toast.makeText(EditProfile.this, "Erro ao atualizar.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(EditProfile.this, "Erro: " + response.code(), Toast.LENGTH_LONG).show();
                         }
                     }
 
                     @Override
                     public void onFailure(Call<UpdateProfileResponse> call, Throwable t) {
-                        Toast.makeText(EditProfile.this, "Falha: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        buttonConfirm.setEnabled(true);
+                        buttonConfirm.setText("Salvar");
+                        Toast.makeText(EditProfile.this, "Erro de conexão: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }

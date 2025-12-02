@@ -26,7 +26,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ActivityTeste extends AppCompatActivity {
 
     private RecyclerView recyclerChat;
-    private TextInputEditText editMessage;   // 🔥 CORRIGIDO AQUI
+    private TextInputEditText editMessage;
     private Button btnSend;
     private LinearLayout inputContainer;
     private LinearLayout layoutResultado;
@@ -38,6 +38,7 @@ public class ActivityTeste extends AppCompatActivity {
     private List<Message> messageList;
     private ChatService chatService;
 
+    // Ajuste a porta se necessário (3000, 4000 ou 8001)
     private static final String BASE_URL = "http://10.0.2.2:3000/";
 
     @Override
@@ -46,12 +47,11 @@ public class ActivityTeste extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_teste);
 
-        // HEADER
         ProfileHeader.setup(this);
 
         // Views
         recyclerChat = findViewById(R.id.recycler_chat);
-        editMessage = findViewById(R.id.edit_message);  // 🔥 CORRIGIDO AQUI
+        editMessage = findViewById(R.id.edit_message);
         btnSend = findViewById(R.id.btn_send);
         inputContainer = findViewById(R.id.input_container);
         layoutResultado = findViewById(R.id.layout_resultado);
@@ -68,19 +68,17 @@ public class ActivityTeste extends AppCompatActivity {
         configurarRetrofit();
         iniciarChatNoServidor();
 
-        // 🔥 BOTÃO ENVIAR COM ACENTO FUNCIONANDO
+        // BOTÃO ENVIAR (Lógica para não cancelar acentuação)
         btnSend.setOnClickListener(v -> {
             String textoDigitado = editMessage.getText() != null
                     ? editMessage.getText().toString()
                     : "";
 
             if (!textoDigitado.trim().isEmpty()) {
-
                 adicionarMensagemNaTela(textoDigitado, true);
-
                 enviarMensagemParaServidor(textoDigitado);
 
-                // LIMPA o campo depois de 120ms para NÃO cancelar acento
+                // Delay pequeno para limpar o campo sem bugar teclado
                 editMessage.postDelayed(() -> editMessage.setText(""), 140);
             }
         });
@@ -89,12 +87,17 @@ public class ActivityTeste extends AppCompatActivity {
         configurarBottomNav();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ProfileHeader.setup(this);
+    }
+
     private void configurarBottomNav() {
         try {
             View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
             if (bottomNavInclude != null) {
-                BottomNavigationView nav =
-                        bottomNavInclude.findViewById(R.id.bottom_navigation);
+                BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
                 BottomNavHelper.setupNavigation(this, nav, R.id.nav_test);
             }
         } catch (Exception ignored) {}
@@ -161,9 +164,7 @@ public class ActivityTeste extends AppCompatActivity {
         chatService.sendMessage(new ChatRequest(texto))
                 .enqueue(new Callback<ChatService.ChatApiResponse>() {
                     @Override
-                    public void onResponse(Call<ChatService.ChatApiResponse> call,
-                                           Response<ChatService.ChatApiResponse> response) {
-
+                    public void onResponse(Call<ChatService.ChatApiResponse> call, Response<ChatService.ChatApiResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             String resposta = response.body().reply;
                             boolean acabou = response.body().isFinal;
@@ -185,9 +186,7 @@ public class ActivityTeste extends AppCompatActivity {
         chatService.getResult()
                 .enqueue(new Callback<ResultResponse>() {
                     @Override
-                    public void onResponse(Call<ResultResponse> call,
-                                           Response<ResultResponse> response) {
-
+                    public void onResponse(Call<ResultResponse> call, Response<ResultResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             mostrarTelaResultado(response.body().getResultado());
                         }

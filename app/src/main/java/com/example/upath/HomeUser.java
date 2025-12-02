@@ -21,50 +21,62 @@ public class HomeUser extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home_user);
 
-        // HEADER
+        // Configuração inicial do Header
         ProfileHeader.setup(this);
 
-        // BOTTOM NAV
         configurarBottomNav();
-
-        // BOTÕES
         configurarBotaoTeste();
         configurarBotaoSimulacao();
-
-        // INSETS
         configurarInsets();
+    }
+
+    // Garante que o Header atualize se você voltar da tela de edição de perfil
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ProfileHeader.setup(this);
     }
 
     private void configurarBotaoTeste() {
         MaterialButton btnTeste = findViewById(R.id.buttonEscolherTeste);
-        btnTeste.setOnClickListener(v -> {
-            Intent i = new Intent(HomeUser.this, ActivityTeste.class);
-            startActivity(i);
-        });
+        if (btnTeste != null) {
+            btnTeste.setOnClickListener(v -> {
+                Intent i = new Intent(HomeUser.this, ActivityTeste.class);
+                startActivity(i);
+            });
+        }
     }
 
     private void configurarBotaoSimulacao() {
         MaterialButton btnSimulacao = findViewById(R.id.buttonSimulacao);
-        btnSimulacao.setOnClickListener(v -> {
-            Intent i = new Intent(HomeUser.this, ActivitySimulation.class);
-            startActivity(i);
-        });
+        if (btnSimulacao != null) {
+            btnSimulacao.setOnClickListener(v -> {
+                Intent i = new Intent(HomeUser.this, ActivitySimulation.class);
+                startActivity(i);
+            });
+        }
     }
 
     private void configurarBottomNav() {
         try {
             View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
-            BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
-            BottomNavHelper.setupNavigation(this, nav, R.id.nav_home);
-        } catch (Exception ignored) {}
+            if (bottomNavInclude != null) {
+                BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
+                BottomNavHelper.setupNavigation(this, nav, R.id.nav_home);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void configurarInsets() {
         View mainLayout = findViewById(R.id.main);
-        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        if (mainLayout != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        }
     }
 }

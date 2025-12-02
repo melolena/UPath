@@ -1,85 +1,22 @@
 package com.example.upath;
 
-import java.util.List;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
 import retrofit2.http.Header;
-import retrofit2.http.POST;
+import retrofit2.http.Multipart;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 
 public interface UserService {
 
-    // --- ROTA: HOME (Cards e Boas-vindas) ---
-    @GET("/api/v1/user/home")
-    Call<ApiResponse<HomeData>> getHome(@Header("Authorization") String token);
-
-    // --- ROTA: PERFIL (Dados do Usuário) ---
-    @GET("/api/v1/user/profile")
-    Call<ApiResponse<ProfileData>> getProfile(@Header("Authorization") String token);
-
-    // --- ATUALIZAR PERFIL ---
-    @PUT("/api/v1/user/profile")
-    Call<ApiResponse<SimpleMessage>> updateProfile(@Header("Authorization") String token, @Body ProfileData dados);
-
-    // --- TROCAR SENHA ---
-    @PUT("/api/v1/user/password")
-    Call<ApiResponse<SimpleMessage>> changePassword(@Header("Authorization") String token, @Body PasswordRequest dados);
-
-    // --- LOGOUT ---
-    @POST("/api/v1/user/logout")
-    Call<ApiResponse<SimpleMessage>> logout(@Header("Authorization") String token);
-
-
-    // ==========================================
-    // CLASSES DE MODELO (Estruturas de Dados)
-    // ==========================================
-
-    // Resposta Genérica do seu Backend (success + data)
-    class ApiResponse<T> {
-        public boolean success;
-        public T data;
-        public String error;
-    }
-
-    // Dados da Home
-    class HomeData {
-        public String nome;
-        public String imagem;
-        public List<CardItem> cards;
-    }
-
-    // Um Card da Home
-    class CardItem {
-        public String titulo;
-        public String descricao;
-        public String imagem;
-    }
-
-    // Dados do Perfil
-    class ProfileData {
-        public int id_usuario;
-        public String nome;
-        public String email;
-        public String foto_url;
-        public String ultimo_login;
-
-        // Construtor vazio para update parcial
-        public ProfileData() {}
-        public ProfileData(String nome, String email) {
-            this.nome = nome;
-            this.email = email;
-        }
-    }
-
-    // Pedido de troca de senha
-    class PasswordRequest {
-        public String nova_senha;
-        public PasswordRequest(String s) { this.nova_senha = s; }
-    }
-
-    // Mensagem simples {"message": "..."}
-    class SimpleMessage {
-        public String message;
-    }
+    // CORREÇÃO: A rota deve bater com o Python (/api/v1/auth/update-me)
+    @Multipart
+    @PUT("auth/update-me")
+    Call<UpdateProfileResponse> updateProfile(
+            @Header("Authorization") String token,
+            @Part("nome") RequestBody nome,
+            @Part("senha") RequestBody senha,
+            @Part MultipartBody.Part foto
+    );
 }

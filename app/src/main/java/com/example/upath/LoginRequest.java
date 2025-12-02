@@ -1,8 +1,8 @@
 package com.example.upath;
 
 public class LoginRequest {
-    private String email;
-    private String senha; // O Python espera "senha", não "password"
+    public String email;
+    public String senha;
 
     public LoginRequest(String email, String senha) {
         this.email = email;
