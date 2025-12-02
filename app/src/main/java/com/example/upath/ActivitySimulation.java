@@ -48,7 +48,7 @@ public class ActivitySimulation extends AppCompatActivity {
     // --- REDE ---
     private ChatService chatService;
 
-    // --- MAPA DO LABEL ENCODER ---
+    // --- MAPA DE CONVERSÃO ---
     private Map<String, String> mapaCursos;
 
     @Override
@@ -58,7 +58,7 @@ public class ActivitySimulation extends AppCompatActivity {
         setContentView(R.layout.activity_simulation);
 
         ajustarPadding();
-        ProfileHeader.setup(this); // Configura o header na criação
+        ProfileHeader.setup(this);
 
         // Inicializa Views
         cardInput = findViewById(R.id.card_input_simulacao);
@@ -84,9 +84,12 @@ public class ActivitySimulation extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        ProfileHeader.setup(this); // Atualiza header ao voltar
+        ProfileHeader.setup(this);
     }
 
+    // --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---
+    // Esquerda: O que aparece no Spinner (Bonito)
+    // Direita: O que vai pro Python (Técnico, MAIÚSCULO, SEM ACENTO)
     private void inicializarMapaCursos() {
         mapaCursos = new HashMap<>();
         mapaCursos.put("Administração", "ADMINISTRACAO");
@@ -99,11 +102,10 @@ public class ActivitySimulation extends AppCompatActivity {
         mapaCursos.put("Sistemas de Informação", "SISTEMAS DE INFORMACAO");
     }
 
-    // Ajuste a porta se necessário (4000 ou 8001 dependendo do seu backend Python/Node)
     private String getBaseUrl() {
-        // Se estiver usando Emulador:
+        // Se estiver no Emulador, use 10.0.2.2.
+        // Se estiver no celular físico via USB, troque pelo IP do seu PC (ex: "http://192.168.1.15:4000/")
         return "http://10.0.2.2:4000/";
-        // Se usar celular físico via USB, troque pelo IP: "http://192.168.0.X:4000/"
     }
 
     private void configurarRetrofit() {
@@ -124,6 +126,7 @@ public class ActivitySimulation extends AppCompatActivity {
     }
 
     private void configurarSpinner() {
+        // Estes nomes devem ser IDÊNTICOS às chaves do mapaCursos (lado esquerdo)
         String[] cursosVisuais = {
                 "Selecione...",
                 "Administração",
@@ -161,17 +164,23 @@ public class ActivitySimulation extends AppCompatActivity {
 
         try {
             double nota = Double.parseDouble(notaStr);
+
+            // Pega o nome visual (Ex: "Ciência da Computação")
             String nomeVisual = spinnerCursos.getSelectedItem().toString();
+
+            // Converte para o técnico (Ex: "CIENCIA DA COMPUTACAO")
             String nomeTecnico = mapaCursos.get(nomeVisual);
 
+            // Segurança: Se não achou no mapa, avisa e para
             if (nomeTecnico == null) {
-                Toast.makeText(this, "Erro interno: curso não mapeado", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Erro: Curso não reconhecido pelo sistema.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             btnSimular.setText("Calculando...");
             btnSimular.setEnabled(false);
 
+            // Envia o nome TÉCNICO para o backend
             SimulationRequest request = new SimulationRequest(nomeTecnico, nota);
 
             chatService.realizarSimulacao(request).enqueue(new Callback<SimulationResponse>() {
@@ -179,21 +188,24 @@ public class ActivitySimulation extends AppCompatActivity {
                 public void onResponse(Call<SimulationResponse> call, Response<SimulationResponse> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         SimulationResponse body = response.body();
+
                         if (body.erro != null && !body.erro.isEmpty()) {
-                            Toast.makeText(ActivitySimulation.this, body.erro, Toast.LENGTH_LONG).show();
+                            Toast.makeText(ActivitySimulation.this, "IA: " + body.erro, Toast.LENGTH_LONG).show();
                             restaurarBotoes();
                             return;
                         }
+
                         mostrarResultado(nomeVisual, body);
+
                     } else {
-                        Toast.makeText(ActivitySimulation.this, "Erro servidor: " + response.code(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ActivitySimulation.this, "Erro no servidor: " + response.code(), Toast.LENGTH_SHORT).show();
                         restaurarBotoes();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<SimulationResponse> call, Throwable t) {
-                    Toast.makeText(ActivitySimulation.this, "Falha de conexão.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ActivitySimulation.this, "Falha de conexão. Verifique se o servidor está rodando.", Toast.LENGTH_LONG).show();
                     restaurarBotoes();
                 }
             });
@@ -235,10 +247,8 @@ public class ActivitySimulation extends AppCompatActivity {
         try {
             View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
             if (bottomNavInclude != null) {
-                BottomNavigationView bottomNavigationView = bottomNavInclude.findViewById(R.id.bottom_navigation);
-                if (bottomNavigationView != null) {
-                    BottomNavHelper.setupNavigation(this, bottomNavigationView, R.id.nav_simulation);
-                }
+                BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
+                BottomNavHelper.setupNavigation(this, nav, R.id.nav_simulation);
             }
         } catch (Exception e) {
             e.printStackTrace();

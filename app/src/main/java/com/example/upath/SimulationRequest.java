@@ -9,4 +9,3 @@ public class SimulationRequest {
         this.nota = nota;
     }
 }
-

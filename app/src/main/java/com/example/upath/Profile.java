@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+// import android.widget.Toast; // Não precisa mais do Toast se não for usar
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,13 +27,11 @@ public class Profile extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         setupInsets();
-        setupHeaderDetail(); // Carrega na criação
+        setupHeaderDetail();
         setupProfileOptions();
         configurarBottomNav();
     }
 
-    // --- CORREÇÃO IMPORTANTE ---
-    // Isso faz os dados atualizarem quando você volta da tela de Editar
     @Override
     protected void onResume() {
         super.onResume();
@@ -62,7 +60,6 @@ public class Profile extends AppCompatActivity {
         ImageView edit = header.findViewById(R.id.icon_edit);
         ImageView back = header.findViewById(R.id.icon_navigate_profile);
 
-        // Recupera os dados mais recentes
         var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
 
         String nomeSalvo = prefs.getString("USER_NAME", "Usuário");
@@ -72,37 +69,36 @@ public class Profile extends AppCompatActivity {
         name.setText(nomeSalvo);
         email.setText(emailSalvo);
 
-        // Carrega a foto (com proteção de cache para atualizar sempre)
         if (fotoSalva != null) {
             Glide.with(this)
                     .load(fotoSalva)
                     .transform(new CircleCrop())
                     .placeholder(R.drawable.user_default_foreground)
                     .error(R.drawable.user_default_foreground)
-                    // O signature força o Glide a recarregar a imagem se ela mudou
                     .signature(new ObjectKey(System.currentTimeMillis()))
                     .into(profileImg);
         } else {
             profileImg.setImageResource(R.drawable.user_default_foreground);
         }
 
-        // Botão Editar (Lápis)
         edit.setOnClickListener(v ->
                 startActivity(new Intent(this, EditProfile.class))
         );
 
-        // Botão Voltar (Seta)
         back.setOnClickListener(v -> finish());
     }
 
     private void setupProfileOptions() {
-        // Apenas "Sobre Nós"
+        // Configura o visual
         setupOption(R.id.option_sobre_nos, R.drawable.info_circle_foreground, "Sobre Nós");
 
+        // Configura o clique para abrir a tela
         View sobreNos = findViewById(R.id.option_sobre_nos);
         if (sobreNos != null) {
             sobreNos.setOnClickListener(v -> {
-                Toast.makeText(this, "UPATH - Versão 1.0", Toast.LENGTH_SHORT).show();
+                // CORREÇÃO AQUI: Abre a Activity de verdade
+                Intent intent = new Intent(Profile.this, SobreNosActivity.class);
+                startActivity(intent);
             });
         }
     }
@@ -123,11 +119,10 @@ public class Profile extends AppCompatActivity {
             View bottomNavInclude = findViewById(R.id.layout_bottom_nav);
             if (bottomNavInclude != null) {
                 BottomNavigationView nav = bottomNavInclude.findViewById(R.id.bottom_navigation);
-                // Nenhum item ativo (-1) pois estamos numa tela "extra"
                 BottomNavHelper.setupNavigation(this, nav, -1);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-}
+}   

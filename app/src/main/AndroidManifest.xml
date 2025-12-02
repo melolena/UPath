@@ -13,45 +13,62 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UPath"
         android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.UPath">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SobreNosActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".EditProfile"
+            android:exported="false" />
+
         <activity
             android:name=".NewPassword"
             android:exported="false" />
+
         <activity
             android:name=".ActivitySimulation"
             android:exported="false"
             android:launchMode="singleTop" />
-        <activity
-            android:name=".EditProfile"
-            android:exported="false" />
+
         <activity
             android:name=".ActivityTeste"
             android:exported="false"
             android:launchMode="singleTop" />
+
         <activity
             android:name=".Profile"
             android:exported="false"
             android:launchMode="singleTop" />
+
         <activity
             android:name=".HomeUser"
             android:exported="false"
             android:launchMode="singleTop" />
+
         <activity
             android:name=".Retrieve"
             android:exported="false" />
+
         <activity
             android:name=".Register"
             android:exported="false"
             android:label="@string/title_activity_register"
             android:theme="@style/Theme.UPath" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
         <meta-data
             android:name="preloaded_fonts"
