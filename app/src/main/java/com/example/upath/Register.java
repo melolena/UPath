@@ -15,6 +15,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
+import java.util.regex.Pattern;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,9 +29,13 @@ public class Register extends AppCompatActivity {
 
     private TextInputEditText editNome, editEmail, editConfirmEmail;
     private TextInputEditText editPassword, editConfirmPassword;
+
+    // Layouts para mostrar as mensagens de erro
+    private TextInputLayout layoutEmail, layoutConfirmEmail;
+    private TextInputLayout layoutPassword, layoutConfirmPassword;
+
     private MaterialButton botaoCadastrar;
 
-    // CORREÇÃO AQUI: Deixei apenas a raiz. O restante (api/v1/auth/register) está no AuthService.
     private static final String BASE_URL = "http://10.0.2.2:8001/";
 
     @Override
@@ -36,25 +43,26 @@ public class Register extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // 1. Vincular os componentes
+        // 1. Vincular Campos de Texto (Filhos)
         editNome = findViewById(R.id.nome);
         editEmail = findViewById(R.id.email);
         editConfirmEmail = findViewById(R.id.confirmEmail);
         editPassword = findViewById(R.id.password);
         editConfirmPassword = findViewById(R.id.confirmPassword);
+
+        // 2. Vincular Layouts (Pais - Para mostrar o erro)
+        layoutEmail = findViewById(R.id.input_email_layout);
+        layoutConfirmEmail = findViewById(R.id.input_confirm_email_layout);
+        layoutPassword = findViewById(R.id.input_password_layout);
+        layoutConfirmPassword = findViewById(R.id.input_confirm_password_layout);
+
         botaoCadastrar = findViewById(R.id.botaoCadastrar);
 
-        // 2. Configurar o clique do botão
-        botaoCadastrar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                registerUser();
-            }
-        });
-
+        // 3. Botão
+        botaoCadastrar.setOnClickListener(v -> registerUser());
         botaoCadastrar.setEnabled(false);
 
-        // 3. Monitorar digitação
+        // 4. Monitoramento em Tempo Real
         TextWatcher watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) { checkFields(); }
@@ -67,7 +75,7 @@ public class Register extends AppCompatActivity {
         editPassword.addTextChangedListener(watcher);
         editConfirmPassword.addTextChangedListener(watcher);
 
-        // 4. Ajuste visual (segurança contra crash se ID mudar)
+        // 5. Ajuste visual (EdgeToEdge)
         View mainView = findViewById(R.id.main);
         if (mainView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
@@ -78,27 +86,70 @@ public class Register extends AppCompatActivity {
         }
     }
 
+    // --- VALIDAÇÃO COMPLETA ---
     private void checkFields() {
         String nome = safeGetText(editNome);
         String email = safeGetText(editEmail);
         String cEmail = safeGetText(editConfirmEmail);
-        String pass = safeGetText(editPassword);
-        String cPass = safeGetText(editConfirmPassword);
+        String senha = safeGetText(editPassword);
+        String cSenha = safeGetText(editConfirmPassword);
 
-        boolean ok = !nome.isEmpty()
-                && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                && email.equals(cEmail)
-                && pass.length() >= 8
-                && pass.equals(cPass);
+        // 1. Validação de E-MAIL
+        boolean emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches();
 
-        botaoCadastrar.setEnabled(ok);
+        if (!email.isEmpty() && !emailValido) {
+            layoutEmail.setError("E-mail inválido.");
+        } else {
+            layoutEmail.setError(null);
+        }
+
+        // 2. Confirmação de E-MAIL
+        boolean emailsIguais = email.equals(cEmail);
+        if (!cEmail.isEmpty() && !emailsIguais) {
+            layoutConfirmEmail.setError("Os e-mails não coincidem.");
+        } else {
+            layoutConfirmEmail.setError(null);
+        }
+
+        // 3. Força da SENHA
+        String erroSenha = validarForcaSenha(senha);
+        if (!senha.isEmpty() && erroSenha != null) {
+            layoutPassword.setError(erroSenha);
+            layoutPassword.setErrorIconDrawable(null); // Tira o ícone para não cobrir o olho
+        } else {
+            layoutPassword.setError(null);
+        }
+
+        // 4. Confirmação de SENHA
+        boolean senhasIguais = senha.equals(cSenha);
+        if (!cSenha.isEmpty() && !senhasIguais) {
+            layoutConfirmPassword.setError("As senhas não coincidem.");
+        } else {
+            layoutConfirmPassword.setError(null);
+        }
+
+        // --- HABILITAR BOTÃO ---
+        boolean tudoCerto = !nome.isEmpty()
+                && emailValido
+                && emailsIguais
+                && (erroSenha == null)
+                && senhasIguais
+                && !senha.isEmpty();
+
+        botaoCadastrar.setEnabled(tudoCerto);
+    }
+
+    private String validarForcaSenha(String senha) {
+        if (senha.length() < 8) return "Mínimo de 8 caracteres.";
+        if (!Pattern.compile("[0-9]").matcher(senha).find()) return "Precisa ter um número.";
+        if (!Pattern.compile("[a-z]").matcher(senha).find()) return "Precisa ter letra minúscula.";
+        if (!Pattern.compile("[A-Z]").matcher(senha).find()) return "Precisa ter letra MAIÚSCULA.";
+        if (!Pattern.compile("[!@#$%^&*(),.?\":{}|<>]").matcher(senha).find()) return "Precisa ter caractere especial.";
+        return null;
     }
 
     private String safeGetText(TextInputEditText editText) {
-        if (editText != null && editText.getText() != null) {
-            return editText.getText().toString().trim();
-        }
-        return "";
+        return (editText != null && editText.getText() != null) ? editText.getText().toString().trim() : "";
     }
 
     public void registerUser() {
@@ -118,10 +169,7 @@ public class Register extends AppCompatActivity {
                     .build();
 
             AuthService service = retrofit.create(AuthService.class);
-
-            RegisterRequest req = new RegisterRequest(
-                    nome, email, confirmEmail, senha, confirmSenha
-            );
+            RegisterRequest req = new RegisterRequest(nome, email, confirmEmail, senha, confirmSenha);
 
             service.cadastrar(req).enqueue(new Callback<LoginResponse>() {
                 @Override
@@ -130,12 +178,16 @@ public class Register extends AppCompatActivity {
                     botaoCadastrar.setText("Cadastrar");
 
                     if (response.isSuccessful()) {
-                        Toast.makeText(Register.this, "Sucesso! Faça login.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(Register.this, "Cadastro realizado!", Toast.LENGTH_LONG).show();
                         startActivity(new Intent(Register.this, MainActivity.class));
                         finish();
                     } else {
-                        // Se der erro, mostra o código (ex: 400, 500)
-                        Toast.makeText(Register.this, "Erro: " + response.code(), Toast.LENGTH_LONG).show();
+                        if (response.code() == 409) {
+                            layoutEmail.setError("E-mail já cadastrado.");
+                            Toast.makeText(Register.this, "E-mail já existe.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(Register.this, "Erro: " + response.code(), Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
 
@@ -143,13 +195,12 @@ public class Register extends AppCompatActivity {
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
                     botaoCadastrar.setEnabled(true);
                     botaoCadastrar.setText("Cadastrar");
-                    Toast.makeText(Register.this, "Falha de conexão: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(Register.this, "Sem conexão.", Toast.LENGTH_LONG).show();
                 }
             });
         } catch (Exception e) {
             botaoCadastrar.setEnabled(true);
             botaoCadastrar.setText("Cadastrar");
-            Toast.makeText(this, "Erro interno: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }

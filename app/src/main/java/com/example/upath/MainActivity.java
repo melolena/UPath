@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.button.MaterialButton; // Importante para o botão novo
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import retrofit2.Call;
@@ -25,9 +25,9 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText editEmail;
     private TextInputEditText editPassword;
-    private MaterialButton buttonLogin; // Mudado para MaterialButton se estiver usando o layout novo
+    private MaterialButton buttonLogin;
 
-    // CORREÇÃO: Apenas a raiz, pois o AuthService já tem "api/v1/auth/login"
+    // URL base correta
     private static final String BASE_URL = "http://10.0.2.2:8001/";
 
     @Override
@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Verifique se os IDs batem com seu XML
         editEmail = findViewById(R.id.edit_email);
         editPassword = findViewById(R.id.edit_password);
         buttonLogin = findViewById(R.id.botao_logar);
@@ -63,13 +62,11 @@ public class MainActivity extends AppCompatActivity {
 
         buttonLogin.setEnabled(validEmail && filled);
 
-        // Remove erro visual se estiver corrigindo
         if (validEmail) {
             editEmail.setError(null);
         }
     }
 
-    // Vinculado ao XML (android:onClick="goToHome") ou pode usar setOnClickListener no onCreate
     public void goToHome(View view) {
         String email = editEmail.getText().toString().trim();
         String senha = editPassword.getText().toString().trim();
@@ -96,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
                     LoginResponse res = response.body();
 
-                    // Salva o token para usar depois
                     SharedPreferences prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
                     SharedPreferences.Editor editor = prefs.edit();
 
@@ -107,8 +103,12 @@ public class MainActivity extends AppCompatActivity {
                     if (res.getUser() != null) {
                         editor.putString("USER_NAME", res.getUser().getNome());
                         editor.putString("USER_EMAIL", res.getUser().getEmail());
+
+                        // --- CORREÇÃO: Limpa a foto anterior se o usuário novo não tiver foto ---
                         if (res.getUser().getFotoUrl() != null) {
                             editor.putString("USER_PHOTO", res.getUser().getFotoUrl());
+                        } else {
+                            editor.remove("USER_PHOTO"); // Garante o ícone padrão
                         }
                     }
                     editor.apply();
@@ -116,13 +116,11 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Bem-vindo!", Toast.LENGTH_SHORT).show();
 
                     Intent intent = new Intent(MainActivity.this, HomeUser.class);
-                    // Limpa a pilha para não voltar ao login ao apertar 'voltar'
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();
 
                 } else {
-                    // Erro 401 (Senha errada) ou 404 (URL errada - mas agora corrigimos a URL)
                     if (response.code() == 401) {
                         Toast.makeText(MainActivity.this, "Senha ou E-mail incorretos.", Toast.LENGTH_LONG).show();
                     } else {

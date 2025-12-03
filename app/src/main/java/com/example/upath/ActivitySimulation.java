@@ -22,6 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -112,8 +113,12 @@ public class ActivitySimulation extends AppCompatActivity {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
+        // AQUI ESTÁ A MUDANÇA: Aumentamos o tempo limite para 60 segundos
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(logging)
+                .connectTimeout(60, TimeUnit.SECONDS) // Tempo para conectar
+                .readTimeout(60, TimeUnit.SECONDS)    // Tempo esperando a resposta (o problema era aqui)
+                .writeTimeout(60, TimeUnit.SECONDS)   // Tempo enviando dados
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -124,7 +129,6 @@ public class ActivitySimulation extends AppCompatActivity {
 
         chatService = retrofit.create(ChatService.class);
     }
-
     private void configurarSpinner() {
         // Estes nomes devem ser IDÊNTICOS às chaves do mapaCursos (lado esquerdo)
         String[] cursosVisuais = {

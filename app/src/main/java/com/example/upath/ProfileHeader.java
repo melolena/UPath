@@ -11,6 +11,7 @@ import androidx.cardview.widget.CardView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.signature.ObjectKey; // IMPORTANTE
 
 public class ProfileHeader {
 
@@ -30,7 +31,6 @@ public class ProfileHeader {
         SharedPreferences prefs = activity.getSharedPreferences("UPATH_PREFS", AppCompatActivity.MODE_PRIVATE);
 
         String nome = prefs.getString("USER_NAME", "Estudante");
-        String email = prefs.getString("USER_EMAIL", "email@email.com");
         String foto = prefs.getString("USER_PHOTO", null);
 
         // Define textos
@@ -44,6 +44,10 @@ public class ProfileHeader {
                     .transform(new CircleCrop())
                     .placeholder(R.drawable.user_default_foreground)
                     .error(R.drawable.user_default_foreground)
+                    // --- O SEGREDO ESTÁ AQUI EMBAIXO ---
+                    // Usa o tempo atual como assinatura. Como o tempo sempre muda,
+                    // o Glide entende que precisa recarregar a imagem do zero.
+                    .signature(new ObjectKey(System.currentTimeMillis()))
                     .into(profileImage);
         } else {
             profileImage.setImageResource(R.drawable.user_default_foreground);

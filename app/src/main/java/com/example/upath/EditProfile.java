@@ -8,7 +8,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar; // Importante para a Toolbar
+import androidx.appcompat.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
@@ -38,7 +38,7 @@ public class EditProfile extends AppCompatActivity {
                     uri -> {
                         if (uri != null) {
                             selectedImage = uri;
-                            // Mostra a imagem na tela imediatamente usando Glide
+                            // Mostra a imagem na tela imediatamente para o usuário ver o que escolheu
                             Glide.with(this).load(uri).into(profileImg);
                         }
                     });
@@ -48,7 +48,7 @@ public class EditProfile extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
-        // 1. Configurar a Toolbar (Seta de voltar)
+        // 1. Configurar Toolbar (Seta de voltar)
         Toolbar toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             toolbar.setNavigationOnClickListener(v -> finish());
@@ -61,23 +61,23 @@ public class EditProfile extends AppCompatActivity {
         buttonConfirm = findViewById(R.id.button_confirm);
         buttonCancel = findViewById(R.id.button_cancel);
 
-        // 3. Carregar dados atuais do SharedPreferences
+        // 3. Carregar dados atuais
         var prefs = getSharedPreferences("UPATH_PREFS", MODE_PRIVATE);
-        String currentName = prefs.getString("USER_NAME", "");
-        inputName.setText(currentName);
+        inputName.setText(prefs.getString("USER_NAME", ""));
 
         String foto = prefs.getString("USER_PHOTO", null);
         if (foto != null) {
             Glide.with(this).load(foto).into(profileImg);
         }
 
-        // 4. Configurar Cliques
+        // 4. Ações dos botões
         findViewById(R.id.btn_change_photo).setOnClickListener(v -> pickImage.launch("image/*"));
 
         buttonCancel.setOnClickListener(v -> finish());
+
         buttonConfirm.setOnClickListener(v -> salvarAlteracoes());
 
-        // 5. Iniciar API
+        // 5. Iniciar Retrofit
         userService = ApiClient.getClient().create(UserService.class);
     }
 
@@ -95,18 +95,18 @@ public class EditProfile extends AppCompatActivity {
         buttonConfirm.setEnabled(false);
         buttonConfirm.setText("Salvando...");
 
-        // Preparar dados para Multipart (Backend espera esses campos)
+        // Preparar dados de Texto
         RequestBody nomeReq = RequestBody.create(MediaType.parse("text/plain"), nome);
 
-        // Se senha for vazia, envia string vazia (o backend deve tratar para não mudar a senha)
+        // Se a senha estiver vazia, manda vazio mesmo (o backend ignora)
         RequestBody senhaReq = RequestBody.create(MediaType.parse("text/plain"), senha);
 
+        // Preparar a Foto (Multipart)
         MultipartBody.Part fotoPart = null;
 
-        // Se o usuário escolheu uma foto nova
         if (selectedImage != null) {
             try {
-                // Usa o FileUtils para converter Uri -> File
+                // Converte a Uri da galeria para um Arquivo real usando a classe FileUtils
                 File file = FileUtils.getFile(this, selectedImage);
 
                 RequestBody reqFile = RequestBody.create(
@@ -138,16 +138,22 @@ public class EditProfile extends AppCompatActivity {
                         if (response.isSuccessful() && response.body() != null) {
                             var data = response.body().data;
 
-                            // Atualizar SharedPreferences com os novos dados recebidos do servidor
+                            // ATUALIZA A MEMÓRIA DO APP (Isso é crucial)
                             var editor = prefs.edit();
+
                             if (data.nome != null) editor.putString("USER_NAME", data.nome);
                             if (data.email != null) editor.putString("USER_EMAIL", data.email);
-                            if (data.fotoUrl != null) editor.putString("USER_PHOTO", data.fotoUrl);
+
+                            // Se veio foto nova, salva. Se veio null (não mudou), mantém a antiga.
+                            if (data.fotoUrl != null) {
+                                editor.putString("USER_PHOTO", data.fotoUrl);
+                            }
+
                             editor.apply();
 
-                            Toast.makeText(EditProfile.this, "Perfil atualizado com sucesso!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(EditProfile.this, "Perfil atualizado!", Toast.LENGTH_SHORT).show();
 
-                            // Fecha a tela e volta para o perfil atualizado
+                            // Fecha a tela. O onResume() da tela anterior vai atualizar a foto lá.
                             finish();
                         } else {
                             Toast.makeText(EditProfile.this, "Erro: " + response.code(), Toast.LENGTH_LONG).show();
@@ -158,7 +164,7 @@ public class EditProfile extends AppCompatActivity {
                     public void onFailure(Call<UpdateProfileResponse> call, Throwable t) {
                         buttonConfirm.setEnabled(true);
                         buttonConfirm.setText("Salvar");
-                        Toast.makeText(EditProfile.this, "Erro de conexão: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EditProfile.this, "Erro de conexão.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
